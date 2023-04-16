@@ -1,5 +1,5 @@
 import Queue from "p-queue";
-import { Entry } from "../types";
+import { Entry } from "../../types";
 
 const DEFAULT_OPTIONS: SchedulerOptions<Entry> = {
   debounceInterval: 50,

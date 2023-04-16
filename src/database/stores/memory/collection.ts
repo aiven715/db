@@ -1,3 +1,10 @@
+import { Schema, Entry, Query } from "~/database/types";
+import { NotFoundError } from "~/database/errors";
+
+import { Indexes } from "./indexes";
+import { filterByPrimaryKey, process } from "./query";
+import { Box } from "~/database/box";
+
 /**
  * 1. Implement read/write in-memory store
  *  - Filtering
@@ -15,26 +22,33 @@
  * 4. Implement loading and merging changes from other stores (pull)
  * 4. Cache queries
  */
-import { Indexes } from "./indexes";
-import { filterByPrimaryKey, process } from "./query";
-import { EntityOptions, Entry, Query, Store } from "../../types";
-import { NotFoundError } from "../../errors";
-
-export class MemoryStore<T extends Entry> implements Store<T> {
+export class MemoryStoreCollection<T extends Entry = Entry> {
   private documents: Map<string, T> = new Map();
-  private indexes = new Indexes<T>(this.options.indexes);
+  private indexes: Indexes<T>;
   private all: string[] = [];
 
-  constructor(private options: EntityOptions<T>) {}
+  constructor(private schema: Schema<T>, items?: T[]) {
+    this.indexes = new Indexes(schema.indexes);
+    if (items) {
+      for (const item of items) {
+        const identifier = item[this.schema.primaryKey] as string;
+        this.all.push(identifier);
+        this.documents.set(identifier, item);
+        this.indexes.add(item, this.schema.primaryKey);
+      }
+    }
+  }
 
-  list(query: Query<T> = {}): T[] {
+  list(query: Query<T> = {}) {
     const filterKeys = Object.keys(query.filter || {}) as (keyof T)[];
     const hasOneFilter = filterKeys.length === 1;
     const filterKey = filterKeys[0];
-    const isPrimaryKeyFilter = !!query.filter?.[this.options.primaryKey];
+    const isPrimaryKeyFilter = !!query.filter?.[this.schema.primaryKey];
 
     if (isPrimaryKeyFilter) {
-      return filterByPrimaryKey(query, this.documents, this.options.primaryKey);
+      return new Box(
+        filterByPrimaryKey(query, this.documents, this.schema.primaryKey)
+      );
     }
 
     const filterValue = query.filter?.[filterKey];
@@ -45,16 +59,17 @@ export class MemoryStore<T extends Entry> implements Store<T> {
       ? this.indexes.identifiers(filterKey, filterValue)
       : this.all;
 
-    return process(query, this.documents, identifiers);
+    return new Box(process(query, this.documents, identifiers));
   }
 
   create(document: T) {
-    const primaryValue = document[this.options.primaryKey] as string;
-    if (!this.all.includes(primaryValue)) {
-      this.all.push(primaryValue);
+    const identifier = document[this.schema.primaryKey] as string;
+    if (!this.all.includes(identifier)) {
+      this.all.push(identifier);
     }
-    this.documents.set(primaryValue, document);
-    this.indexes.add(document, this.options.primaryKey);
+    this.documents.set(identifier, document);
+    this.indexes.add(document, this.schema.primaryKey);
+    return new Box(void 0);
   }
 
   update(identifier: string, change: Partial<T>) {
@@ -64,13 +79,15 @@ export class MemoryStore<T extends Entry> implements Store<T> {
     }
     Object.assign(document, change);
     this.indexes.remove(identifier);
-    this.indexes.add(document, this.options.primaryKey);
+    this.indexes.add(document, this.schema.primaryKey);
+    return new Box(void 0);
   }
 
   remove(identifier: string) {
     this.documents.delete(identifier);
     this.indexes.remove(identifier);
     this.all.splice(this.all.indexOf(identifier), 1);
+    return new Box(void 0);
   }
 }
 

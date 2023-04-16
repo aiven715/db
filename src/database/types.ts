@@ -1,3 +1,5 @@
+import { Box } from "./box";
+
 export interface Props {
   id: string;
   [key: string]: unknown;
@@ -14,16 +16,29 @@ export type Query<T extends Entry = Entry> = {
   offset?: number;
 };
 
-// TODO: should return MaybePromise<T> or Box<T> type
-export interface Store<T extends Entry> {
-  list(query?: Query<T>): T[];
-  create(document: T): void;
-  update(identifier: string, document: Partial<T>): void;
-  remove(identifier: string): void;
+export interface Store {
+  list(collection: string, query?: Query): Box<Entry[]>;
+  // TODO: add get method
+  create(collection: string, document: Entry): Box<void>;
+  update(
+    collection: string,
+    identifier: string,
+    document: Partial<Entry>
+  ): Box<void>;
+  remove(collection: string, identifier: string): Box<void>;
 }
 
-export type EntityOptions<T extends Entry> = {
+export interface Sync {}
+
+export type DatabaseOptions = {
   name: string;
+  schemas: Record<string, Schema>;
+};
+
+export type Schema<T extends Entry = Entry> = {
   primaryKey: keyof T;
   indexes: (keyof T)[];
+  // fields: T;
+  version: number;
+  // migrations: [];
 };

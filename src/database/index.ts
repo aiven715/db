@@ -1,19 +1,43 @@
-import { Storage } from "./store/storage";
-import { Collection } from "./collection";
-import { Props } from "./types";
+import { MemorySyncStore } from "./stores/memory-sync";
+import { FsStore } from "~/database/stores/fs";
+import { IndexedDBStore } from "~/database/stores/indexeddb";
+// import { Collection } from "./collection";
+// import { Props } from "./types";
 
-type Database<K extends string> = {
-  collections: { [P in K]: Collection<Props> };
+// type Database<K extends string> = {
+//   collections: { [P in K]: Collection<Props> };
+// };
+//
+// export const init = <C extends string[], P extends C[number]>(
+//   collections: C
+// ) => {
+//   // const database = { collections: {} } as Database<P>;
+//   // for (const collectionName of collections) {
+//   //   const storage = new Storage(collectionName);
+//   //   database.collections[collectionName as P] = new Collection(storage);
+//   // }
+//   // return database;
+// };
+
+const options = {
+  name: "app",
+  schemas: {
+    todos: {
+      version: 0,
+      primaryKey: "id",
+      indexes: ["title", "completed"],
+    },
+  },
 };
 
-export const init = <C extends string[], P extends C[number]>(
-  collections: C
-) => {
-  const database = { collections: {} } as Database<P>;
-  for (const collectionName of collections) {
-    const storage = new Storage(collectionName);
-    database.collections[collectionName as P] = new Collection(storage);
-  }
-  return database;
-};
-export { EntityOptions } from "~/database/types";
+async function main() {
+  const store = await MemorySyncStore.init(
+    options,
+    await IndexedDBStore.init(options)
+  );
+  store.list("todos").then(console.log);
+  // store.update("todos", "1", { title: "abc" });
+  // store.list("todos").then(console.log);
+}
+
+main();
