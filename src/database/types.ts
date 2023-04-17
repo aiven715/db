@@ -1,4 +1,5 @@
 import { Box } from "./box";
+import { Observable } from "rxjs";
 
 export interface Props {
   id: string;
@@ -16,9 +17,17 @@ export type Query<T extends Entry = Entry> = {
   offset?: number;
 };
 
+export type Result<T> = {
+  map<U>(fn: (value: T) => U | Result<U>): Result<U>;
+  catch<U>(fn: (error: Error) => U | Result<U>): Result<U>;
+  asValue(): T;
+  asPromise(): Promise<T>;
+  asObservable(): Observable<T>;
+};
+
 export interface Store {
   list(collection: string, query?: Query): Box<Entry[]>;
-  // TODO: add get method
+  get(collection: string, identifier: string): Box<Entry>;
   create(collection: string, document: Entry): Box<void>;
   update(
     collection: string,

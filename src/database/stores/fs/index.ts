@@ -14,11 +14,13 @@ export class FsStore implements Store {
   async list(collection: string, query?: Query) {
     const fileNames = await this.backend.listDirectory(collection);
     return await Promise.all(
-      fileNames.map(async (fileName) => {
-        const file = await this.backend.readFile(collection, fileName);
-        return deserialize(file);
-      })
+      fileNames.map(async (fileName) => this.get(collection, fileName))
     );
+  }
+
+  async get(collection: string, identifier: string) {
+    const file = await this.backend.readFile(collection, identifier);
+    return deserialize(file);
   }
 
   async create(collection: string, document: Entry) {

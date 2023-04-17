@@ -22,6 +22,10 @@ export class MemoryStore implements Store {
     return this.collection(collection).list(query);
   }
 
+  get(collection: string, identifier: string) {
+    return this.collection(collection).get(identifier);
+  }
+
   create(collection: string, document: Entry) {
     return this.collection(collection).create(document);
   }

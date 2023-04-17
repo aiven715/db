@@ -1,5 +1,4 @@
 import { MemorySyncStore } from "./stores/memory-sync";
-import { FsStore } from "~/database/stores/fs";
 import { IndexedDBStore } from "~/database/stores/indexeddb";
 // import { Collection } from "./collection";
 // import { Props } from "./types";
@@ -36,8 +35,6 @@ async function main() {
     await IndexedDBStore.init(options)
   );
   store.list("todos").then(console.log);
-  // store.update("todos", "1", { title: "abc" });
-  // store.list("todos").then(console.log);
 }
 
 main();

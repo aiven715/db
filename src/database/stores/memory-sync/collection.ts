@@ -17,6 +17,10 @@ export class MemorySyncStoreCollection<T extends Entry = Entry> {
     return this.memoryStore.list(this.name, query);
   }
 
+  get(identifier: string) {
+    return this.memoryStore.get(this.name, identifier);
+  }
+
   create(document: T) {
     this.memoryStore.create(this.name, document);
     this.persistentStore.create(this.name, document);

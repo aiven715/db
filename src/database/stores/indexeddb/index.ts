@@ -17,6 +17,11 @@ export class IndexedDBStore implements Store {
     return binaries.map((binary) => deserialize(binary));
   }
 
+  async get(collection: string, identifier: string) {
+    const binary = await this.idb.get(collection, identifier);
+    return deserialize(binary);
+  }
+
   async create(collection: string, document: Entry) {
     const identifier = this.identifier(document, collection);
     const binary = serialize(document);

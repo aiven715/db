@@ -22,6 +22,8 @@ import { Box } from "~/database/box";
  * 4. Implement loading and merging changes from other stores (pull)
  * 4. Cache queries
  */
+// TODO: document object should be get Proxy to allow for reactive field-level updates
+// in React components. In that case we won't need a separate Reactive cache for the Model React integration and auto-saves.
 export class MemoryStoreCollection<T extends Entry = Entry> {
   private documents: Map<string, T> = new Map();
   private indexes: Indexes<T>;
@@ -62,6 +64,14 @@ export class MemoryStoreCollection<T extends Entry = Entry> {
     return new Box(process(query, this.documents, identifiers));
   }
 
+  get(identifier: string) {
+    const document = this.documents.get(identifier);
+    if (!document) {
+      throw new NotFoundError(identifier);
+    }
+    return new Box(document);
+  }
+
   create(document: T) {
     const identifier = document[this.schema.primaryKey] as string;
     if (!this.all.includes(identifier)) {
@@ -98,9 +108,9 @@ export class MemoryStoreCollection<T extends Entry = Entry> {
 
 /**
  * ### Collection
- * - Has Reactive module
+ * - Has Reactive store module
  *
- * ### Reactive
+ * ### Reactive store
  * - Has Store module
  *
  * ### Store
