@@ -24,6 +24,7 @@ import { Box } from "~/database/box";
  */
 // TODO: document object should be get Proxy to allow for reactive field-level updates
 // in React components. In that case we won't need a separate Reactive cache for the Model React integration and auto-saves.
+// Proxy need to be in React hooks, not in the store. (also memo them)
 export class MemoryStoreCollection<T extends Entry = Entry> {
   private documents: Map<string, T> = new Map();
   private indexes: Indexes<T>;
