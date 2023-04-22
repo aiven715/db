@@ -1,84 +1,114 @@
-// StoreA (InMemory + IndexedDB)
-// StoreB (Postgres)
-// StoreC (Filesystem)
-
 // The goal is to have ability to use the library with async store (without in-memory)
 
-// Will contain InMemoryStore or PersistentStore
-import { Observable, Subject } from "rxjs";
+import { Subject } from "rxjs";
+import { distinctUntilChanged, map } from "rxjs/operators";
+import get from "lodash/get";
+import isEqual from "lodash/isEqual";
 import { Entry, Query, Store } from "./types";
 import { Box } from "./box";
 import { Result } from "./result";
 
 export class ReactiveStore {
-  private streams = new Map<string, ListStream>();
+  private queries = new Map<string, Subject<Entry[]>>();
+  private entries = new Map<string, Subject<Entry>>();
 
   constructor(private store: Store) {}
 
-  observe<T extends Entry>(id: string): Observable<T>;
-  observe<T extends Entry, P extends keyof T>(
-    id: string,
-    path: P
-  ): Observable<T[P]>;
-  observe<T extends Entry, P extends string[]>(
-    id: string,
-    path: P
-  ): Observable<Path<T, P>>;
-  observe(id: string, path?: string | string[]): Observable<unknown> {}
-
   list(collection: string, query?: Query): Result<Entry[]> {
-    const observable = this.acquireListStream(collection).observable;
-    return new Result(observable);
+    const querySubject = this.getOrCreateQuerySubject(collection, query);
+    this.store
+      .list(collection, query)
+      .then((items) => querySubject.next(items));
+    return new Result(querySubject.pipe(distinctUntilChanged(isEqual)));
   }
 
-  get(collection: string, id: string): Result<Entry> {}
+  get(collection: string, id: string, path?: string | string[]) {
+    const entrySubject = this.getOrCreateEntrySubject(collection, id);
+    this.store.get(collection, id).then((item) => entrySubject.next(item));
+    return new Result(
+      entrySubject.pipe(
+        map((entry) => (path ? get(entry, path) : entry)),
+        distinctUntilChanged(isEqual)
+      )
+    );
+  }
 
-  create<T extends Entry>(collection: string, document: T): Box<void> {}
+  create<T extends Entry>(collection: string, entry: T): Box<void> {
+    return this.store
+      .create(collection, entry)
+      .then(() => this.notifyQueries(collection));
+  }
 
-  update(collection: string, id: string, document: Partial<Entry>): Box<void> {}
+  update(collection: string, id: string, slice: Partial<Entry>): Box<void> {
+    return this.store.update(collection, id, slice).then(() => {
+      this.notifyQueries(collection);
+      this.notifyEntry(collection, id);
+    });
+  }
 
-  remove(collection: string, id: string): Box<void> {}
+  remove(collection: string, id: string): Box<void> {
+    return this.store
+      .remove(collection, id)
+      .then(() => this.notifyQueries(collection));
+  }
 
-  private acquireListStream(collection: string, query?: Query) {
-    const key = this.identifyQuery(query);
-    let stream = this.streams.get(key);
-    if (!stream) {
-      stream = new ListStream(this.store, collection, query);
-      this.streams.set(key, stream);
+  private notifyQueries(collection: string) {
+    for (const [key, subject] of this.queries) {
+      const [keyCollection, queryStr] = key.split(":");
+      if (keyCollection === collection) {
+        const query = queryStr ? JSON.parse(queryStr) : undefined;
+        this.store.list(collection, query).then((items) => subject.next(items));
+      }
     }
-    return stream;
   }
 
-  private identifyQuery(query?: Query): string {
+  private notifyEntry(collection: string, id: string) {
+    for (const [key, subject] of this.entries) {
+      const [keyCollection, keyId] = key.split(":");
+      if (keyCollection === collection && keyId === id) {
+        this.store.get(collection, id).then((item) => subject.next(item));
+        break;
+      }
+    }
+  }
+
+  private getOrCreateQuerySubject(
+    collection: string,
+    query?: Query
+  ): Subject<Entry[]> {
+    const key = this.identifyQuery(collection, query);
+    const subject = this.queries.get(key);
+    if (subject) {
+      return subject;
+    }
+    const newSubject = new Subject<Entry[]>();
+    this.queries.set(key, newSubject);
+    return newSubject;
+  }
+
+  private getOrCreateEntrySubject(
+    collection: string,
+    id: string
+  ): Subject<Entry> {
+    const key = this.identifyEntry(collection, id);
+    const subject = this.entries.get(key);
+    if (subject) {
+      return subject;
+    }
+    const newSubject = new Subject<Entry>();
+    this.entries.set(key, newSubject);
+    return newSubject;
+  }
+
+  private identifyQuery(collection: string, query?: Query): string {
     // TODO: produce the same string regardless of the order of keys
-    return JSON.stringify(query);
+    if (query) {
+      return `${collection}:${JSON.stringify(query)}`;
+    }
+    return collection;
+  }
+
+  private identifyEntry(collection: string, id: string): string {
+    return `${collection}:${id}`;
   }
 }
-
-class ListStream {
-  private subject: Subject<Entry[]>;
-
-  get observable() {
-    return this.subject.asObservable();
-  }
-
-  constructor(store: Store, collection: string, query?: Query) {
-    this.subject = new Subject();
-    store.list(collection, query).then((items) => this.subject.next(items));
-  }
-}
-
-type Path<T, P extends string[]> = P extends [infer K, ...infer Rest]
-  ? K extends keyof T
-    ? Rest extends string[]
-      ? Path<T[K], Rest>
-      : T[K]
-    : never
-  : T;
-
-// Will contain ReactiveStore
-// Schema Validation
-// Preloading
-class Collection {}
-
-// Collection -> ReactiveStore -> InMemoryStore and/or PersistentStore -> RemoteStore (another peer like tab or device)
