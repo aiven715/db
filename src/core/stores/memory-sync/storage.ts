@@ -1,8 +1,15 @@
 import * as idb from "idb";
 import { IDBPDatabase } from "idb";
-import { DatabaseOptions } from "~/database/types";
+import { DatabaseOptions } from "../../types";
 
-export class Idb {
+// Should we use FS api instead of indexedDB?
+// - How to handle transactions?
+
+// Should have one indexeddb database
+// collections will have "collection:name" object store
+// indexes will have "indexes" object store with keys as collection names
+
+export class Storage {
   constructor(private db: IDBPDatabase) {}
 
   async list(collection: string, db = this.db): Promise<Uint8Array[]> {
@@ -40,7 +47,7 @@ export class Idb {
         db.createObjectStore("indexes");
       },
     });
-    return new Idb(db);
+    return new Storage(db);
   }
 }
 

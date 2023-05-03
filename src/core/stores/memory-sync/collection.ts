@@ -1,6 +1,6 @@
-import { Entry, Query, Schema, Store } from "~/database/types";
+import { Entry, Query, Schema, Store } from "~/core/types";
 import { Scheduler } from "./scheduler";
-import { Box } from "~/database/box";
+import { Box } from "~/core/box";
 
 // 1. TODO: write indexes together with create/update/delete as a transaction so in case of failure we won't have inconsistent state
 export class MemorySyncStoreCollection<T extends Entry = Entry> {

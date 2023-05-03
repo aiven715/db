@@ -1,7 +1,7 @@
 export class Indexes<T, K extends keyof T = keyof T> {
   private indexes: Map<K, Map<T[K], string[]>> = new Map();
 
-  constructor(private indexKeys: K[]) {}
+  constructor(private indexKeys: K[] = []) {}
 
   public add(document: T, primaryKey: keyof T) {
     const identifier = document[primaryKey] as string;

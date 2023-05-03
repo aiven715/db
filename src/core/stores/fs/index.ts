@@ -1,5 +1,5 @@
-import { FsStoreBackend } from "~/database/stores/fs/backends";
-import { deserialize, serialize, update } from "~/database/automerge";
+import { FsStoreBackend } from "../../stores/fs/backends";
+import { deserialize, serialize, update } from "../../automerge";
 import { DatabaseOptions, Entry, Query, Store, Sync } from "../../types";
 
 // TODO: implement indexes support

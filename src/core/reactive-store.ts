@@ -1,6 +1,4 @@
-// The goal is to have ability to use the library with async store (without in-memory)
-
-import { Subject } from "rxjs";
+import { ReplaySubject } from "rxjs";
 import { distinctUntilChanged, map } from "rxjs/operators";
 import get from "lodash/get";
 import isEqual from "lodash/isEqual";
@@ -9,8 +7,8 @@ import { Box } from "./box";
 import { Result } from "./result";
 
 export class ReactiveStore {
-  private queries = new Map<string, Subject<Entry[]>>();
-  private entries = new Map<string, Subject<Entry>>();
+  private queries = new Map<string, ReplaySubject<Entry[]>>();
+  private entries = new Map<string, ReplaySubject<Entry>>();
 
   constructor(private store: Store) {}
 
@@ -22,6 +20,7 @@ export class ReactiveStore {
     return new Result(querySubject.pipe(distinctUntilChanged(isEqual)));
   }
 
+  // TODO: should return what fields were updated
   get(collection: string, id: string, path?: string | string[]) {
     const entrySubject = this.getOrCreateEntrySubject(collection, id);
     this.store.get(collection, id).then((item) => entrySubject.next(item));
@@ -75,13 +74,13 @@ export class ReactiveStore {
   private getOrCreateQuerySubject(
     collection: string,
     query?: Query
-  ): Subject<Entry[]> {
+  ): ReplaySubject<Entry[]> {
     const key = this.identifyQuery(collection, query);
     const subject = this.queries.get(key);
     if (subject) {
       return subject;
     }
-    const newSubject = new Subject<Entry[]>();
+    const newSubject = new ReplaySubject<Entry[]>(1);
     this.queries.set(key, newSubject);
     return newSubject;
   }
@@ -89,13 +88,13 @@ export class ReactiveStore {
   private getOrCreateEntrySubject(
     collection: string,
     id: string
-  ): Subject<Entry> {
+  ): ReplaySubject<Entry> {
     const key = this.identifyEntry(collection, id);
     const subject = this.entries.get(key);
     if (subject) {
       return subject;
     }
-    const newSubject = new Subject<Entry>();
+    const newSubject = new ReplaySubject<Entry>(1);
     this.entries.set(key, newSubject);
     return newSubject;
   }

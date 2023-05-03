@@ -2,7 +2,7 @@ import { Entry, Query, Store, DatabaseOptions } from "../../types";
 
 import { MemoryStore } from "../memory";
 import { MemorySyncStoreCollection } from "./collection";
-import { fetchInitialData } from "~/database/stores/memory-sync/utils";
+import { fetchInitialData } from "~/core/stores/memory-sync/utils";
 
 export class MemorySyncStore implements Store {
   private constructor(

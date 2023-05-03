@@ -1,9 +1,12 @@
-// import { Todos } from "~/components/Todos";
-//
-// import ReactDOM from "react-dom/client";
+import { Todos } from "~/components/Todos";
 
-// const root = ReactDOM.createRoot(document.getElementById("root")!);
-// root.render(<Todos />);
+import ReactDOM from "react-dom/client";
+import { DatabaseProvider } from "~/db";
 
-import "./database";
-// import * as benchmark from "./benchmark";
+const root = ReactDOM.createRoot(document.getElementById("root")!);
+
+root.render(
+  <DatabaseProvider>
+    <Todos />
+  </DatabaseProvider>
+);

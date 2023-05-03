@@ -1,3 +1,5 @@
+import z from "zod";
+
 import { Box } from "./box";
 import { Observable } from "rxjs";
 
@@ -46,8 +48,8 @@ export type DatabaseOptions = {
 
 export type Schema<T extends Entry = Entry> = {
   primaryKey: keyof T;
-  indexes: (keyof T)[];
-  // fields: T;
   version: number;
+  definition: z.ZodObject<z.ZodRawShape>;
+  indexes?: (keyof T)[];
   // migrations: [];
 };

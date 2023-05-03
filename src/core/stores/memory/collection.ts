@@ -1,9 +1,9 @@
-import { Schema, Entry, Query } from "~/database/types";
-import { NotFoundError } from "~/database/errors";
+import { Schema, Entry, Query } from "~/core/types";
+import { NotFoundError } from "~/core/errors";
 
 import { Indexes } from "./indexes";
 import { filterByPrimaryKey, process } from "./query";
-import { Box } from "~/database/box";
+import { Box } from "~/core/box";
 
 /**
  * 1. Implement read/write in-memory store

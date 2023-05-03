@@ -1,8 +1,13 @@
-import { createTodo, listTodos, removeTodo, renameTodo } from "~/entities/todo";
+import { uuid } from "@automerge/automerge";
 import { useObservable } from "~/hooks/useObservable";
+import { useDatabase } from "~/db";
 
 export const Todos = () => {
-  const todos = useObservable(() => listTodos(), []);
+  const database = useDatabase();
+  const todos = useObservable(
+    () => database.collections.todos.list().asObservable(),
+    []
+  );
 
   return (
     <div className="font-mono text-white max-w-xl mx-auto pt-12">
@@ -16,11 +21,15 @@ export const Todos = () => {
             placeholder="Enter todo text"
             className="bg-transparent outline-none w-full py-2"
             defaultValue={todo.text}
-            onChange={(e) => renameTodo(todo.id, e.target.value)}
+            onChange={(e) =>
+              database.collections.todos.update(todo.id, {
+                text: e.target.value,
+              })
+            }
           />
           <span
             className="ml-auto cursor-pointer"
-            onClick={() => removeTodo(todo.id)}
+            onClick={() => database.collections.todos.remove(todo.id)}
           >
             ❌
           </span>
@@ -31,11 +40,17 @@ export const Todos = () => {
         placeholder="Enter todo text"
         className="bg-transparent outline-none w-full py-4"
         autoFocus
-        onKeyDown={async (e: any) => {
+        onKeyDown={(e: any) => {
           const text = e.target.value;
           if (e.key === "Enter" && text) {
-            await createTodo(text);
-            e.target.value = "";
+            database.collections.todos
+              .create({
+                id: uuid(),
+                text: e.target.value,
+              })
+              .then(() => {
+                e.target.value = "";
+              });
           }
         }}
       />

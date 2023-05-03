@@ -1,5 +1,5 @@
 import { InternalError } from "../../errors";
-import { Entry, Query } from "~/database/types";
+import { Entry, Query } from "~/core/types";
 
 export const filterByPrimaryKey = <T extends Entry>(
   query: Query<T>,

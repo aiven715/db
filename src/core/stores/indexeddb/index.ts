@@ -1,4 +1,4 @@
-import { deserialize, serialize, update } from "~/database/automerge";
+import { deserialize, serialize, update } from "~/core/automerge";
 import { DatabaseOptions, Entry, Query, Store, Sync } from "../../types";
 import { Idb } from "./idb";
 

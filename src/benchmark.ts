@@ -1,6 +1,6 @@
 import * as idb from "idb";
 import { faker } from "@faker-js/faker";
-import { deserialize, serialize } from "~/database/automerge";
+import { deserialize, serialize } from "./core/automerge";
 
 const COUNT = 1;
 faker.seed(1);

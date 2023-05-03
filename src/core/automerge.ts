@@ -1,5 +1,5 @@
 import * as Automerge from "@automerge/automerge";
-import { Entry } from "~/database/types";
+import { Entry } from "./types";
 
 export const serialize = <T extends Entry>(value: T) => {
   const doc = Automerge.from(value);
