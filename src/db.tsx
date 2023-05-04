@@ -4,7 +4,6 @@ import { MemorySyncStore } from "./core/stores/memory-sync";
 import { IndexedDBStore } from "./core/stores/indexeddb";
 import { create } from "./core";
 import { createContext, useContext, useEffect, useState } from "react";
-import { Entry } from "~/core/types";
 
 async function createDatabase() {
   return await create(
@@ -16,7 +15,7 @@ async function createDatabase() {
           primaryKey: "id",
           // indexes: ["title", "completed"],
           definition: z.object({
-            id_: z.string(),
+            id: z.string(),
             text: z.string(),
             completed: z.boolean(),
           }),
@@ -57,28 +56,3 @@ export const DatabaseProvider = ({
     </DatabaseContext.Provider>
   );
 };
-
-type Schema_<D extends z.ZodObject<z.ZodRawShape>> = {
-  primaryKey: keyof z.infer<D>;
-  definition: D;
-};
-
-const handleSchemas = <
-  S extends {
-    [K in string]: S[K] extends Schema_<infer D> ? "a" : never;
-  }
->(
-  schemas: S
-) => {};
-
-handleSchemas({
-  todos: {
-    // Doest not raise a type error. Should allow only keys of the definition
-    primaryKey: "id",
-    definition: z.object({
-      id: z.string(),
-      text: z.string(),
-      completed: z.boolean(),
-    }),
-  },
-});

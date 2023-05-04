@@ -1,7 +1,6 @@
 import z from "zod";
 
 import { Box } from "./box";
-import { Observable } from "rxjs";
 
 export interface Props {
   id: string;
@@ -17,14 +16,6 @@ export type Query<T extends Entry = Entry> = {
   sort?: { key: keyof T; direction: "asc" | "desc" };
   limit?: number;
   offset?: number;
-};
-
-export type Result<T> = {
-  map<U>(fn: (value: T) => U | Result<U>): Result<U>;
-  catch<U>(fn: (error: Error) => U | Result<U>): Result<U>;
-  asValue(): T;
-  asPromise(): Promise<T>;
-  asObservable(): Observable<T>;
 };
 
 export interface Store {

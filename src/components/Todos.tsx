@@ -47,6 +47,7 @@ export const Todos = () => {
               .create({
                 id: uuid(),
                 text: e.target.value,
+                completed: false,
               })
               .then(() => {
                 e.target.value = "";
