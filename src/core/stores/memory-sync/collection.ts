@@ -1,4 +1,4 @@
-import { Entry, Query, Schema, Store } from "~/core/types";
+import { Entry, Query, CollectionConfig, Store } from "~/core/types";
 import { Scheduler } from "./scheduler";
 import { Box } from "~/core/box";
 
@@ -8,7 +8,7 @@ export class MemorySyncStoreCollection<T extends Entry = Entry> {
 
   constructor(
     private name: string,
-    private schema: Schema,
+    private config: CollectionConfig,
     private memoryStore: Store,
     private persistentStore: Store
   ) {}

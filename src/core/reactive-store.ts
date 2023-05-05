@@ -17,10 +17,12 @@ export class ReactiveStore {
     this.store
       .list(collection, query)
       .then((items) => querySubject.next(items));
+    // FIXME: does not work properly because we mutate data
     return new Result(querySubject.pipe(distinctUntilChanged(isEqual)));
   }
 
-  // TODO: should return what fields were updated
+  // TODO: should return what fields were updated via Symbol
+  // TODO: remove path argument
   get(collection: string, id: string, path?: string | string[]) {
     const entrySubject = this.getOrCreateEntrySubject(collection, id);
     this.store.get(collection, id).then((item) => entrySubject.next(item));

@@ -37,7 +37,7 @@ export class MemorySyncStore implements Store {
     return collection;
   }
 
-  static async init(
+  static async create(
     options: DatabaseOptions,
     persistentStore: Store
   ): Promise<MemorySyncStore> {
@@ -45,11 +45,11 @@ export class MemorySyncStore implements Store {
     const memoryStore = new MemoryStore(options, initialData);
     const collections = new Map<string, MemorySyncStoreCollection>();
 
-    for (const collectionName in options.schemas) {
-      const schema = options.schemas[collectionName];
+    for (const collectionName in options.collections) {
+      const config = options.collections[collectionName];
       const collection = new MemorySyncStoreCollection(
         collectionName,
-        schema,
+        config,
         memoryStore,
         persistentStore
       );

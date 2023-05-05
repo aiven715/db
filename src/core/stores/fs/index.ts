@@ -46,15 +46,15 @@ export class FsStore implements Store {
   }
 
   private identifier(document: Entry, collection: string) {
-    return document[this.options.schemas[collection].primaryKey] as string;
+    return document[this.options.collections[collection].primaryKey] as string;
   }
 
-  static async init(
+  static async create(
     options: DatabaseOptions,
     backend: FsStoreBackend,
     sync: Sync
   ) {
-    for (const collectionName in options.schemas) {
+    for (const collectionName in options.collections) {
       await backend.createDirectory(collectionName);
     }
     return new FsStore(options, backend, sync);

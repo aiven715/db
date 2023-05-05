@@ -46,11 +46,11 @@ export class IndexedDBStore implements Store {
   }
 
   private identifier(document: Entry, collection: string) {
-    return document[this.options.schemas[collection].primaryKey] as string;
+    return document[this.options.collections[collection].primaryKey] as string;
   }
 
-  static async init(options: DatabaseOptions, sync?: Sync) {
-    const idb = await Idb.init(options);
+  static async create(options: DatabaseOptions, sync?: Sync) {
+    const idb = await Idb.create(options);
     return new IndexedDBStore(options, idb, sync);
   }
 }

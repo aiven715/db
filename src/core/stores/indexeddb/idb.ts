@@ -31,10 +31,10 @@ export class Idb {
     await tx.done;
   }
 
-  static async init(options: DatabaseOptions) {
+  static async create(options: DatabaseOptions) {
     const db = await idb.openDB(options.name, 1, {
       upgrade: (db) => {
-        for (const collectionName in options.schemas) {
+        for (const collectionName in options.collections) {
           db.createObjectStore(key(collectionName));
         }
         db.createObjectStore("indexes");

@@ -40,7 +40,7 @@ export class OpfsFsStoreBackend implements FsStoreBackend {
     // await file.removeEntry(name, { recursive: true });
   }
 
-  static async init() {
+  static async create() {
     const fs = await navigator.storage.getDirectory();
     return new OpfsFsStoreBackend(fs);
   }

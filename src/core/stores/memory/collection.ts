@@ -1,4 +1,4 @@
-import { Schema, Entry, Query } from "~/core/types";
+import { CollectionConfig, Entry, Query } from "~/core/types";
 import { NotFoundError } from "~/core/errors";
 
 import { Indexes } from "./indexes";
@@ -30,14 +30,14 @@ export class MemoryStoreCollection<T extends Entry = Entry> {
   private indexes: Indexes<T>;
   private all: string[] = [];
 
-  constructor(private schema: Schema<T>, items?: T[]) {
-    this.indexes = new Indexes(schema.indexes);
+  constructor(private config: CollectionConfig<T>, items?: T[]) {
+    this.indexes = new Indexes(config.indexes);
     if (items) {
       for (const item of items) {
-        const identifier = item[this.schema.primaryKey] as string;
+        const identifier = item[this.config.primaryKey] as string;
         this.all.push(identifier);
         this.documents.set(identifier, item);
-        this.indexes.add(item, this.schema.primaryKey);
+        this.indexes.add(item, this.config.primaryKey);
       }
     }
   }
@@ -46,11 +46,11 @@ export class MemoryStoreCollection<T extends Entry = Entry> {
     const filterKeys = Object.keys(query.filter || {}) as (keyof T)[];
     const hasOneFilter = filterKeys.length === 1;
     const filterKey = filterKeys[0];
-    const isPrimaryKeyFilter = !!query.filter?.[this.schema.primaryKey];
+    const isPrimaryKeyFilter = !!query.filter?.[this.config.primaryKey];
 
     if (isPrimaryKeyFilter) {
       return new Box(
-        filterByPrimaryKey(query, this.documents, this.schema.primaryKey)
+        filterByPrimaryKey(query, this.documents, this.config.primaryKey)
       );
     }
 
@@ -74,12 +74,12 @@ export class MemoryStoreCollection<T extends Entry = Entry> {
   }
 
   create(document: T) {
-    const identifier = document[this.schema.primaryKey] as string;
+    const identifier = document[this.config.primaryKey] as string;
     if (!this.all.includes(identifier)) {
       this.all.push(identifier);
     }
     this.documents.set(identifier, document);
-    this.indexes.add(document, this.schema.primaryKey);
+    this.indexes.add(document, this.config.primaryKey);
     return new Box(void 0);
   }
 
@@ -88,9 +88,11 @@ export class MemoryStoreCollection<T extends Entry = Entry> {
     if (!document) {
       throw new NotFoundError(identifier);
     }
+    // TODO: should we __partially?__ clone on mutate?
+    // this.documents.set(identifier, { ...document, ...change } as T);
     Object.assign(document, change);
     this.indexes.remove(identifier);
-    this.indexes.add(document, this.schema.primaryKey);
+    this.indexes.add(document, this.config.primaryKey);
     return new Box(void 0);
   }
 

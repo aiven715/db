@@ -9,11 +9,11 @@ export class MemoryStore implements Store {
     initialData?: Record<string, Entry[]>,
     sync?: Sync
   ) {
-    for (const collectionName in options.schemas) {
-      const schema = options.schemas[collectionName];
+    for (const collectionName in options.collections) {
+      const config = options.collections[collectionName];
       this.collections.set(
         collectionName,
-        new MemoryStoreCollection(schema, initialData?.[collectionName])
+        new MemoryStoreCollection(config, initialData?.[collectionName])
       );
     }
   }

@@ -2,12 +2,9 @@ import z from "zod";
 
 import { Box } from "./box";
 
-export interface Props {
-  id: string;
-  [key: string]: unknown;
-}
-
 export type Identifier = string;
+
+export type Schema = z.ZodObject<z.ZodRawShape>;
 
 export type Entry = Record<string, unknown>;
 
@@ -21,7 +18,10 @@ export type Query<T extends Entry = Entry> = {
 export interface Store {
   list(collection: string, query?: Query): Box<Entry[]>;
   get(collection: string, identifier: string): Box<Entry>;
+  // TODO: store should return data on create and update? to avoid
+  // extra get in async stores
   create(collection: string, document: Entry): Box<void>;
+  // TODO: rename to set
   update(
     collection: string,
     identifier: string,
@@ -34,13 +34,13 @@ export interface Sync {}
 
 export type DatabaseOptions = {
   name: string;
-  schemas: Record<string, Schema>;
+  collections: Record<string, CollectionConfig>;
 };
 
-export type Schema<T extends Entry = Entry> = {
+export type CollectionConfig<T extends Entry = Entry> = {
   primaryKey: keyof T;
   version: number;
-  definition: z.ZodObject<z.ZodRawShape>;
+  schema: Schema;
   indexes?: (keyof T)[];
   // migrations: [];
 };

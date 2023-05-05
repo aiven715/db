@@ -1,4 +1,4 @@
-import { Entry, Query, Schema } from "./types";
+import { Entry, Query, CollectionConfig } from "./types";
 import { ReactiveStore } from "~/core/reactive-store";
 import { Result } from "~/core/result";
 
@@ -12,7 +12,7 @@ import { Result } from "~/core/result";
 export class Collection<T extends Entry = Entry> {
   constructor(
     private name: string,
-    private schema: Schema<T>,
+    private config: CollectionConfig<T>,
     private reactiveStore: ReactiveStore
   ) {}
 
