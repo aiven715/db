@@ -9,7 +9,7 @@ module.exports = {
   bracketSpacing: true,
   quoteProps: 'consistent',
   importOrder: ['^~(.*)$', ...generateRelativePathRegexes(10), '^./'],
-  importOrderParserPlugins: ['typescript', 'decorators'],
+  importOrderParserPlugins: ['typescript', 'jsx', 'decorators'],
   importOrderSeparation: true,
   importOrderSortSpecifiers: true,
 }
