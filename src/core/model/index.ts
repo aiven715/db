@@ -1,4 +1,4 @@
-import { DeepPartial } from "~/library";
+import { DeepPartial } from "~/library/types";
 
 import { Entry, Query, Schema } from "../types";
 import { DATABASE_GLOBAL_KEY } from "./bootstrap";

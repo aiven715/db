@@ -1,4 +1,4 @@
-import { DeepPartial } from "~/library";
+import { DeepPartial } from "~/library/types";
 
 export const createFieldsProxy = <T extends Record<string, any>>(
   fields: T,

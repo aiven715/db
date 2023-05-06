@@ -1,9 +1,10 @@
-import { CollectionConfig, Entry, Query } from "~/core/types";
-import { NotFoundError } from "~/core/errors";
+import { Box } from '~/core/box'
+import { NotFoundError } from '~/core/errors'
+import { CollectionConfig, Entry, Query } from '~/core/types'
+import { mergeObjects } from '~/library/utils'
 
-import { Indexes } from "./indexes";
-import { filterByPrimaryKey, process } from "./query";
-import { Box } from "~/core/box";
+import { Indexes } from './indexes'
+import { filterByPrimaryKey, process } from './query'
 
 /**
  * 1. Implement read/write in-memory store
@@ -26,81 +27,79 @@ import { Box } from "~/core/box";
 // in React components. In that case we won't need a separate Reactive cache for the Model React integration and auto-saves.
 // Proxy need to be in React hooks, not in the store. (also memo them)
 export class MemoryStoreCollection<T extends Entry = Entry> {
-  private documents: Map<string, T> = new Map();
-  private indexes: Indexes<T>;
-  private all: string[] = [];
+  private documents: Map<string, T> = new Map()
+  private indexes: Indexes<T>
+  private all: string[] = []
 
   constructor(private config: CollectionConfig<T>, items?: T[]) {
-    this.indexes = new Indexes(config.indexes);
+    this.indexes = new Indexes(config.indexes)
     if (items) {
       for (const item of items) {
-        const identifier = item[this.config.primaryKey] as string;
-        this.all.push(identifier);
-        this.documents.set(identifier, item);
-        this.indexes.add(item, this.config.primaryKey);
+        const identifier = item[this.config.primaryKey] as string
+        this.all.push(identifier)
+        this.documents.set(identifier, item)
+        this.indexes.add(item, this.config.primaryKey)
       }
     }
   }
 
   list(query: Query<T> = {}) {
-    const filterKeys = Object.keys(query.filter || {}) as (keyof T)[];
-    const hasOneFilter = filterKeys.length === 1;
-    const filterKey = filterKeys[0];
-    const isPrimaryKeyFilter = !!query.filter?.[this.config.primaryKey];
+    const filterKeys = Object.keys(query.filter || {}) as (keyof T)[]
+    const hasOneFilter = filterKeys.length === 1
+    const filterKey = filterKeys[0]
+    const isPrimaryKeyFilter = !!query.filter?.[this.config.primaryKey]
 
     if (isPrimaryKeyFilter) {
       return new Box(
         filterByPrimaryKey(query, this.documents, this.config.primaryKey)
-      );
+      )
     }
 
-    const filterValue = query.filter?.[filterKey];
+    const filterValue = query.filter?.[filterKey]
     const useIndex =
-      hasOneFilter && filterValue && this.indexes.has(filterKey, filterValue);
+      hasOneFilter && filterValue && this.indexes.has(filterKey, filterValue)
 
     const identifiers = useIndex
       ? this.indexes.identifiers(filterKey, filterValue)
-      : this.all;
+      : this.all
 
-    return new Box(process(query, this.documents, identifiers));
+    return new Box(process(query, this.documents, identifiers))
   }
 
   get(identifier: string) {
-    const document = this.documents.get(identifier);
+    const document = this.documents.get(identifier)
     if (!document) {
-      throw new NotFoundError(identifier);
+      throw new NotFoundError(identifier)
     }
-    return new Box(document);
+    return new Box(document)
   }
 
   create(document: T) {
-    const identifier = document[this.config.primaryKey] as string;
+    const identifier = document[this.config.primaryKey] as string
     if (!this.all.includes(identifier)) {
-      this.all.push(identifier);
+      this.all.push(identifier)
     }
-    this.documents.set(identifier, document);
-    this.indexes.add(document, this.config.primaryKey);
-    return new Box(void 0);
+    this.documents.set(identifier, document)
+    this.indexes.add(document, this.config.primaryKey)
+    return new Box(void 0)
   }
 
   update(identifier: string, change: Partial<T>) {
-    const document = this.documents.get(identifier);
+    const document = this.documents.get(identifier)
     if (!document) {
-      throw new NotFoundError(identifier);
+      throw new NotFoundError(identifier)
     }
-    // TODO: should we __partially?__ clone on mutate?
-    // this.documents.set(identifier, { ...document, ...change } as T);
-    Object.assign(document, change);
-    this.indexes.remove(identifier);
-    this.indexes.add(document, this.config.primaryKey);
-    return new Box(void 0);
+    this.documents.set(identifier, mergeObjects(document, change) as T)
+    this.indexes.remove(identifier)
+    this.indexes.add(document, this.config.primaryKey)
+    return new Box(void 0)
   }
 
   remove(identifier: string) {
-    this.documents.delete(identifier);
-    this.indexes.remove(identifier);
-    this.all.splice(this.all.indexOf(identifier), 1);
-    return new Box(void 0);
+    this.documents.delete(identifier)
+    this.indexes.remove(identifier)
+    this.all.splice(this.all.indexOf(identifier), 1)
+    return new Box(void 0)
   }
 }
 
