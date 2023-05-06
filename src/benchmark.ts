@@ -1,10 +1,11 @@
-import * as idb from "idb";
-import { faker } from "@faker-js/faker";
-import { deserialize, serialize } from "./core/automerge";
+import { faker } from '@faker-js/faker'
+import * as idb from 'idb'
 
-const COUNT = 1;
-faker.seed(1);
-const people = generatePeople();
+import { deserialize, serialize } from './core/automerge'
+
+const COUNT = 1
+faker.seed(1)
+const people = generatePeople()
 
 export async function main() {
   // benchmark("json", () => filterData("json"));
@@ -14,7 +15,7 @@ export async function main() {
 }
 
 function generatePeople() {
-  const people = [];
+  const people = []
   for (let i = 0; i < COUNT; i++) {
     people.push({
       id: faker.datatype.uuid(),
@@ -25,15 +26,15 @@ function generatePeople() {
       city: faker.address.city(),
       state: faker.address.state(),
       zip: faker.address.zipCode(),
-    });
+    })
   }
-  return people;
+  return people
 }
 
-export async function filterData(format: "json" | "binary") {
-  const db = await idb.openDB(`test:${format}`, 1);
-  const tx = db.transaction("people", "readonly");
-  const store = tx.objectStore("people");
+export async function filterData(format: 'json' | 'binary') {
+  const db = await idb.openDB(`test:${format}`, 1)
+  const tx = db.transaction('people', 'readonly')
+  const store = tx.objectStore('people')
 
   // let cursor = await store.openCursor();
   // while (true) {
@@ -47,28 +48,28 @@ export async function filterData(format: "json" | "binary") {
   //   cursor = await cursor.continue();
   // }
   // return results;
-  return await store.getAll();
+  return await store.getAll()
 }
 
-async function insertData(format: "json" | "binary") {
+async function insertData(format: 'json' | 'binary') {
   const db = await idb.openDB(`test:${format}`, 1, {
     upgrade(db) {
-      db.createObjectStore("people", {
+      db.createObjectStore('people', {
         autoIncrement: true,
-      });
+      })
     },
-  });
-  const tx = db.transaction("people", "readwrite");
-  const store = tx.objectStore("people");
+  })
+  const tx = db.transaction('people', 'readwrite')
+  const store = tx.objectStore('people')
   for (const person of people) {
-    await store.put(format === "json" ? person : serialize(person));
+    await store.put(format === 'json' ? person : serialize(person))
   }
-  await tx.done;
-  db.close();
+  await tx.done
+  db.close()
 }
 
-async function benchmark(type: "json" | "binary", fn: () => Promise<any>) {
-  console.time(type);
-  await fn();
-  console.timeEnd(type);
+async function benchmark(type: 'json' | 'binary', fn: () => Promise<any>) {
+  console.time(type)
+  await fn()
+  console.timeEnd(type)
 }

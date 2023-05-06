@@ -1,13 +1,13 @@
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject } from 'rxjs'
 
 export class State {
-  private subject = new BehaviorSubject(null);
+  private subject = new BehaviorSubject(null)
 
   get stream() {
-    return this.subject.asObservable();
+    return this.subject.asObservable()
   }
 
   ping() {
-    this.subject.next(null);
+    this.subject.next(null)
   }
 }

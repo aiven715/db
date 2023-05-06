@@ -1,56 +1,57 @@
-import { DeepPartial } from "~/library/types";
+import { DeepPartial } from '~/library/types'
 
-import { Entry, Query, Schema } from "../types";
-import { DATABASE_GLOBAL_KEY } from "./bootstrap";
-import { createFieldsProxy } from "./fields";
+import { Entry, Query, Schema } from '../types'
+
+import { DATABASE_GLOBAL_KEY } from './bootstrap'
+import { createFieldsProxy } from './fields'
 
 export class Model<T extends Entry> {
-  static collectionName: string;
-  static schema: Schema;
-  static primaryKey = "id";
-  static version = 0;
+  static collectionName: string
+  static schema: Schema
+  static primaryKey = 'id'
+  static version = 0
 
-  fields: T;
-  #patch: DeepPartial<T> = {};
+  fields: T
+  #patch: DeepPartial<T> = {}
 
   constructor(fields: T) {
-    this.fields = createFieldsProxy(fields, this.#patch);
+    this.fields = createFieldsProxy(fields, this.#patch)
   }
 
   get id() {
-    return this.fields[this.class.primaryKey] as string;
+    return this.fields[this.class.primaryKey] as string
   }
 
   save() {
     return this.class.collection.update(this.id, this.#patch).then(() => {
-      this.#patch = {};
-    });
+      this.#patch = {}
+    })
   }
 
   remove() {
-    return this.class.collection.remove(this.id);
+    return this.class.collection.remove(this.id)
   }
 
   protected get class() {
-    return this.constructor as typeof Model;
+    return this.constructor as typeof Model
   }
 
   protected static get collection() {
-    return this.database.collections[this.collectionName];
+    return this.database.collections[this.collectionName]
   }
 
   private static get database() {
-    const database = window[DATABASE_GLOBAL_KEY];
+    const database = window[DATABASE_GLOBAL_KEY]
     if (!database) {
-      throw new Error("Database not found");
+      throw new Error('Database not found')
     }
-    return database;
+    return database
   }
 
   static get<T extends Entry, M extends typeof Model<T>>(this: M, id: string) {
     return this.collection
       .get(id)
-      .map((fields) => new this(fields as T) as InstanceType<M>);
+      .map((fields) => new this(fields as T) as InstanceType<M>)
   }
 
   static list<T extends Entry, M extends typeof Model<T>>(
@@ -61,17 +62,17 @@ export class Model<T extends Entry> {
       .list(query)
       .map((items) =>
         items.map((fields) => new this(fields as T) as InstanceType<M>)
-      );
+      )
   }
 
   static create<T extends Entry, M extends typeof Model<T>>(
     this: M,
     fields: T
   ) {
-    return this.collection.create(fields);
+    return this.collection.create(fields)
   }
 
   static remove(id: string) {
-    return this.collection.remove(id);
+    return this.collection.remove(id)
   }
 }

@@ -1,12 +1,12 @@
-import { Todos } from "~/app/components/Todos";
+import ReactDOM from 'react-dom/client'
 
-import ReactDOM from "react-dom/client";
-import { DatabaseBootstrap } from "~/app/db";
+import { Todos } from '~/app/components/Todos'
+import { DatabaseBootstrap } from '~/app/db'
 
-const root = ReactDOM.createRoot(document.getElementById("root")!);
+const root = ReactDOM.createRoot(document.getElementById('root')!)
 
 root.render(
   <DatabaseBootstrap>
     <Todos />
   </DatabaseBootstrap>
-);
+)

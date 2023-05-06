@@ -1,8 +1,9 @@
-import { Model } from "./index";
-import { Entry } from "../types";
+import { Entry } from '../types'
 
-export const registry: (typeof Model<Entry>)[] = [];
+import { Model } from './index'
+
+export const registry: (typeof Model<Entry>)[] = []
 
 export const register = (Class: typeof Model<Entry>) => {
-  registry.push(Class);
-};
+  registry.push(Class)
+}

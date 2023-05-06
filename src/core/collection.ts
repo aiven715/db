@@ -1,6 +1,7 @@
-import { Entry, Query, CollectionConfig } from "./types";
-import { ReactiveStore } from "~/core/reactive-store";
-import { Result } from "~/core/result";
+import { ReactiveStore } from '~/core/reactive-store'
+import { Result } from '~/core/result'
+
+import { CollectionConfig, Entry, Query } from './types'
 
 // TODO: work with Sync here
 // reactive sync - true
@@ -17,22 +18,22 @@ export class Collection<T extends Entry = Entry> {
   ) {}
 
   list(query?: Query) {
-    return this.reactiveStore.list(this.name, query) as Result<T[]>;
+    return this.reactiveStore.list(this.name, query) as Result<T[]>
   }
 
   get(id: string, path?: string | string[]) {
-    return this.reactiveStore.get(this.name, id, path) as Result<T>;
+    return this.reactiveStore.get(this.name, id, path) as Result<T>
   }
 
   create(entry: T) {
-    return this.reactiveStore.create(this.name, entry);
+    return this.reactiveStore.create(this.name, entry)
   }
 
   update(id: string, slice: Partial<T>) {
-    return this.reactiveStore.update(this.name, id, slice);
+    return this.reactiveStore.update(this.name, id, slice)
   }
 
   remove(id: string) {
-    return this.reactiveStore.remove(this.name, id);
+    return this.reactiveStore.remove(this.name, id)
   }
 }

@@ -1,5 +1,5 @@
 export type DeepPartial<T> = {
-  [P in keyof T]?: DeepPartial<T[P]>;
-};
+  [P in keyof T]?: DeepPartial<T[P]>
+}
 
-export type AnyRecord = Record<string, any>;
+export type AnyRecord = Record<string, any>

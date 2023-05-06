@@ -1,38 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react'
 
-import { MemorySyncStore } from "~/core/stores/memory-sync";
-import { IndexedDBStore } from "~/core/stores/indexeddb";
-import { bootstrap } from "~/core/model/bootstrap";
+import { bootstrap } from '~/core/model/bootstrap'
+import { IndexedDBStore } from '~/core/stores/indexeddb'
+import { MemorySyncStore } from '~/core/stores/memory-sync'
 
-import { Todo } from "./models/todo";
+import { Todo } from './models/todo'
 
 export const DatabaseBootstrap = ({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) => {
-  const [initialized, setInitialized] = useState(false);
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    init().then(() => setInitialized(true));
-  }, []);
+    init().then(() => setInitialized(true))
+  }, [])
 
   if (!initialized) {
-    return null;
+    return null
   }
 
-  return <>{children}</>;
-};
+  return <>{children}</>
+}
 
 async function init() {
   await bootstrap({
-    databaseName: "app",
+    databaseName: 'app',
     createStore: async (options) =>
       await MemorySyncStore.create(
         options,
         await IndexedDBStore.create(options)
       ),
-  });
+  })
   // const [todo] = Todo.list().asValue();
   // console.log(todo);
 }

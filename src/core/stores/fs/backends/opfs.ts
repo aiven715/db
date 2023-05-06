@@ -1,26 +1,26 @@
-import { FsStoreBackend } from "./index";
+import { FsStoreBackend } from './index'
 
 export class OpfsFsStoreBackend implements FsStoreBackend {
   constructor(private root: FileSystemDirectoryHandle) {}
 
   async listDirectory(directory: string): Promise<string[]> {
-    const dir = await this.root.getDirectoryHandle(directory);
-    const names: string[] = [];
+    const dir = await this.root.getDirectoryHandle(directory)
+    const names: string[] = []
     for await (const entry of dir as any) {
-      names.push(entry.name);
+      names.push(entry.name)
     }
-    return names;
+    return names
   }
 
   async createDirectory(directory: string): Promise<void> {
-    await this.root.getDirectoryHandle(directory, { create: true });
+    await this.root.getDirectoryHandle(directory, { create: true })
   }
 
   async readFile(directory: string, name: string): Promise<Uint8Array> {
-    const file = await this.root.getFileHandle(`${directory}/${name}`);
-    const fileHandle = await file.getFile();
-    const fileBlob = await fileHandle.slice();
-    return new Uint8Array(await fileBlob.arrayBuffer());
+    const file = await this.root.getFileHandle(`${directory}/${name}`)
+    const fileHandle = await file.getFile()
+    const fileBlob = await fileHandle.slice()
+    return new Uint8Array(await fileBlob.arrayBuffer())
   }
 
   async writeFile(
@@ -41,7 +41,7 @@ export class OpfsFsStoreBackend implements FsStoreBackend {
   }
 
   static async create() {
-    const fs = await navigator.storage.getDirectory();
-    return new OpfsFsStoreBackend(fs);
+    const fs = await navigator.storage.getDirectory()
+    return new OpfsFsStoreBackend(fs)
   }
 }
