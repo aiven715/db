@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
-import { distinctUntilChanged, skip } from 'rxjs/operators'
-
-import { Collection } from '~/core/collection'
-import { createModelProxy } from '~/core/model/react/utils'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
+import { distinctUntilChanged } from 'rxjs/operators'
 
 import { Result } from '../../result'
 import { Entry } from '../../types'
@@ -19,22 +22,31 @@ export const useModel = <T extends Entry, U extends Model<T>>(
   retrieve: () => Result<U>,
   deps: unknown[]
 ) => {
-  const observingKeys = {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const model = useMemo(() => retrieve().asValue(), deps)
-  const [fields, setFields] = useState(model.fields)
-  const proxy = useMemo(
-    () => createModelProxy(model, fields, observingKeys),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    deps
-  )
+  const valueRef = useRef<U>()
+
+  if (!valueRef.current) {
+    valueRef.current = retrieve().asValue()
+  }
 
   useEffect(() => {
-    const collection = proxy['class']['collection'] as unknown as Collection<T>
-    collection.get(proxy.id).asObservable().pipe(skip(1)).subscribe(setFields)
-  }, [proxy])
+    valueRef.current = retrieve().asValue()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
 
-  return proxy
+  const subscribe = useCallback((callback: VoidFunction) => {
+    const subscription = retrieve()
+      .asObservable()
+      .subscribe((value) => {
+        valueRef.current = value
+        callback()
+      })
+    return () => subscription.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
+
+  const getSnapshot = useCallback(() => valueRef.current!, [])
+
+  return useSyncExternalStore(subscribe, getSnapshot)
 }
 
 export const useIds = <T extends { id: string }>(

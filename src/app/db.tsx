@@ -4,8 +4,6 @@ import { bootstrap } from '~/core/model/bootstrap'
 import { IndexedDBStore } from '~/core/stores/indexeddb'
 import { MemorySyncStore } from '~/core/stores/memory-sync'
 
-import { Todo } from './models/todo'
-
 export const DatabaseBootstrap = ({
   children,
 }: {

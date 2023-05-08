@@ -1,12 +1,14 @@
 import ReactDOM from 'react-dom/client'
 
-import { Todos } from '~/app/components/Todos'
+import { Root, StateProvider } from '~/app/components/Root'
 import { DatabaseBootstrap } from '~/app/db'
 
 const root = ReactDOM.createRoot(document.getElementById('root')!)
 
 root.render(
   <DatabaseBootstrap>
-    <Todos />
+    <StateProvider>
+      <Root />
+    </StateProvider>
   </DatabaseBootstrap>
 )

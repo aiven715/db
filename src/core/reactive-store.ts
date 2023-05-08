@@ -54,7 +54,7 @@ export class ReactiveStore {
 
   private notifyQueries(collection: string) {
     for (const [key, subject] of this.queries) {
-      const [keyCollection, queryStr] = key.split(':')
+      const [keyCollection, queryStr] = this.splitKey(key)
       if (keyCollection === collection) {
         const query = queryStr ? JSON.parse(queryStr) : undefined
         this.store.list(collection, query).then((items) => subject.next(items))
@@ -64,7 +64,7 @@ export class ReactiveStore {
 
   private notifyEntry(collection: string, id: string) {
     for (const [key, subject] of this.entries) {
-      const [keyCollection, keyId] = key.split(':')
+      const [keyCollection, keyId] = this.splitKey(key)
       if (keyCollection === collection && keyId === id) {
         this.store.get(collection, id).then((item) => subject.next(item))
         break
@@ -110,5 +110,15 @@ export class ReactiveStore {
 
   private identifyEntry(collection: string, id: string): string {
     return `${collection}:${id}`
+  }
+
+  private splitKey(key: string): [string, string | undefined] {
+    const separatorIndex = key.indexOf(':')
+    if (separatorIndex === -1) {
+      return [key, undefined]
+    }
+    const collection = key.slice(0, separatorIndex)
+    const query = key.slice(separatorIndex + 1)
+    return [collection, query]
   }
 }
