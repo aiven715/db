@@ -12,9 +12,11 @@ export class Model<T extends Entry> {
   static version = 0
 
   fields: T
+  // #fields: T
   #patch: DeepPartial<T> = {}
 
   constructor(fields: T) {
+    // this.#fields = clone(fields)
     this.fields = createFieldsProxy(fields, this.#patch)
   }
 
@@ -24,6 +26,9 @@ export class Model<T extends Entry> {
 
   save() {
     return this.class.collection.update(this.id, this.#patch).then(() => {
+      // FIXME: won't work with async store
+      // once we'll implement returning data in update:
+      // this.#fields = clone(updated)
       this.#patch = {}
     })
   }
@@ -48,6 +53,7 @@ export class Model<T extends Entry> {
     return database
   }
 
+  // TODO: should we notify when fields of relations change?
   static get<T extends Entry, M extends typeof Model<T>>(this: M, id: string) {
     return this.collection
       .get(id)
