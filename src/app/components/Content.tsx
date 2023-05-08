@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 import { useModel } from '~/core/model/react/hooks'
 
 import { RequestSpec } from '../models/requestspec'
@@ -50,10 +52,15 @@ export type BodyProps = {
 
 const Body = ({ requestSpecId }: BodyProps) => {
   const requestSpec = useModel(
-    'requestSpec_',
+    'requestSpec',
     () => RequestSpec.get(requestSpecId),
     [requestSpecId]
   )
+
+  useEffect(() => {
+    console.log('spec body')
+  }, [requestSpec])
+
   return (
     <textarea
       className='w-full h-48 text-black rounded p-1'

@@ -11,8 +11,6 @@ export class Model<T extends Entry> {
   static primaryKey = 'id'
   static version = 0
 
-  foo = 'bar'
-
   fields: T
   // #fields: T
   #patch: DeepPartial<T> = {}
@@ -56,7 +54,11 @@ export class Model<T extends Entry> {
   }
 
   // TODO: should we notify when fields of relations change?
-  static get<T extends Entry, M extends typeof Model<T>>(this: M, id: string) {
+  static get<T extends Entry, M extends typeof Model<T>>(
+    this: M,
+    id: string,
+    include?: any
+  ) {
     return this.collection
       .get(id)
       .map((fields) => new this(fields as T) as InstanceType<M>)
@@ -64,7 +66,8 @@ export class Model<T extends Entry> {
 
   static list<T extends Entry, M extends typeof Model<T>>(
     this: M,
-    query?: Query
+    query?: Query,
+    include?: any
   ) {
     return this.collection
       .list(query)
