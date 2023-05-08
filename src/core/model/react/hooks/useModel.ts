@@ -1,9 +1,4 @@
-import {
-  affectedToPathList,
-  createProxy,
-  isChanged,
-  markToTrack,
-} from 'proxy-compare'
+import { createProxy, isChanged, markToTrack } from 'proxy-compare'
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 
 import { Result } from '~/core/result'
@@ -12,10 +7,15 @@ import { Entry } from '~/core/types'
 import { Model } from '../../index'
 
 /**
- * 1. Update component only when accessed properties change
- *  - including:
- *    - own fields (with relations, like collectionId)
- *    - fields of relations
+ * 1. Sync / Async
+ * 2. Standalone / With relations
+ * 3. Memo output
+ */
+
+/**
+ * 1. Make sure we're not making props "affected" when they're accessed in the
+ * callback.
+ * 2. Make sure nothing missed from "useSnapshot" Valtio implementation.
  */
 export const useModel = <T extends Entry, U extends Model<T>>(
   key: string,
@@ -23,14 +23,13 @@ export const useModel = <T extends Entry, U extends Model<T>>(
   deps: unknown[]
 ) => {
   const [getValue, setValue] = useValue(() => retrieve().asValue(), deps)
-  const lastAffected = useRef<WeakMap<object, unknown>>()
+  const affectedRef = useRef<WeakMap<object, unknown>>()
 
   const subscribe = useCallback((callback: VoidFunction) => {
     const subscription = retrieve()
       .asObservable()
       .subscribe((nextValue) => {
-        console.log(affectedToPathList(getValue(), lastAffected.current!))
-        if (isChanged(getValue(), nextValue, lastAffected.current!)) {
+        if (isChanged(getValue(), nextValue, affectedRef.current!)) {
           setValue(nextValue)
           callback()
         }
@@ -41,7 +40,7 @@ export const useModel = <T extends Entry, U extends Model<T>>(
 
   const affected = new WeakMap()
   useEffect(() => {
-    lastAffected.current = affected
+    affectedRef.current = affected
   })
 
   const snapshot = useSyncExternalStore(subscribe, getValue)
@@ -55,15 +54,15 @@ const useValue = <T extends Entry, U extends Model<T>>(
 ) => {
   const valueRef = useRef<U>()
   const setValue = useCallback((value: U) => {
-    // TODO: should we call it multiple times? check internal implementation
     markToTrack(value, true)
     valueRef.current = value
   }, [])
   const getValue = useCallback(() => valueRef.current!, [])
-  useEffect(() => {
-    setValue(init())
+  useEffect(
+    () => setValue(init()),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
+    deps
+  )
   if (!valueRef.current) {
     setValue(init())
   }
