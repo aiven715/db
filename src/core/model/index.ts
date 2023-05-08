@@ -11,6 +11,8 @@ export class Model<T extends Entry> {
   static primaryKey = 'id'
   static version = 0
 
+  foo = 'bar'
+
   fields: T
   // #fields: T
   #patch: DeepPartial<T> = {}

@@ -1,7 +1,8 @@
 import { uuid } from '@automerge/automerge'
 
 import { useAppState } from '~/app/components/Root'
-import { useIds, useModel } from '~/core/model/react/hooks'
+import { useModel } from '~/core/model/react/hooks'
+import { useIds } from '~/core/model/react/hooks/useIds'
 
 import { Collection } from '../models/collection'
 import { RequestSpec } from '../models/requestspec'

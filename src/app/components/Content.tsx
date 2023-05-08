@@ -50,7 +50,7 @@ export type BodyProps = {
 
 const Body = ({ requestSpecId }: BodyProps) => {
   const requestSpec = useModel(
-    'requestSpec',
+    'requestSpec_',
     () => RequestSpec.get(requestSpecId),
     [requestSpecId]
   )
