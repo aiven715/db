@@ -57,9 +57,14 @@ const Body = ({ requestSpecId }: BodyProps) => {
     [requestSpecId]
   )
 
-  useEffect(() => {
-    console.log('spec body')
-  }, [requestSpec])
+  // useEffect(() => {
+  //   const spec = RequestSpec.get(requestSpecId, { collection: true }).asValue()
+  //   console.log(spec)
+  // }, [])
+
+  // useEffect(() => {
+  //   console.log('spec body')
+  // }, [requestSpec])
 
   return (
     <textarea

@@ -39,3 +39,5 @@ export function mergeObjects(obj1: AnyRecord, obj2: AnyRecord): AnyRecord {
   }
   return merged
 }
+
+export const singular = (str: string) => str.replace(/s$/, '')

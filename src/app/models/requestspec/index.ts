@@ -1,19 +1,16 @@
 import { Collection } from '~/app/models/collection'
 import { Model } from '~/core/model'
 import { register } from '~/core/model/registry'
+import { relation } from '~/core/model/relations'
 
 import { RequestSpecEntry, schema } from './schema'
 
 @register
 export class RequestSpec extends Model<RequestSpecEntry> {
-  static collectionName = 'requestspecs'
-  static schema = schema
-  static relations = {
-    collection: {
-      model: Collection,
-      type: 'belongsTo', // or 'hasOne'
-      foreignKey: 'collectionId',
-    },
+  static readonly collectionName = 'requestspecs'
+  static readonly schema = schema
+  static readonly relations = {
+    collection: relation(Collection),
   }
 
   setName(name: string) {
@@ -28,3 +25,9 @@ export class RequestSpec extends Model<RequestSpecEntry> {
     this.fields.body = body
   }
 }
+
+// const spec = RequestSpec.get('1', {
+//   collection: true,
+// }).asValue()
+// //
+// const collection = spec.collection

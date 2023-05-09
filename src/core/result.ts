@@ -1,4 +1,4 @@
-import { Observable, firstValueFrom, of } from 'rxjs'
+import { Observable, combineLatest, firstValueFrom, of } from 'rxjs'
 import { catchError, switchMap } from 'rxjs/operators'
 
 export class Result<T> {
@@ -15,6 +15,12 @@ export class Result<T> {
           return of(result)
         })
       )
+    )
+  }
+
+  switchMap<U>(fn: (value: T) => Result<U>): Result<U> {
+    return new Result(
+      this.observable.pipe(switchMap((value) => fn(value).observable))
     )
   }
 
@@ -44,5 +50,12 @@ export class Result<T> {
 
   asObservable() {
     return this.observable
+  }
+
+  static combineLatest<T>(items: Result<T>[]): Result<T[]> {
+    if (!items.length) {
+      return new Result(of([]))
+    }
+    return new Result(combineLatest(items.map((item) => item.observable)))
   }
 }

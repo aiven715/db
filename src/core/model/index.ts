@@ -1,3 +1,10 @@
+import {
+  Include,
+  Relation,
+  RelationInstances,
+  getRelations,
+} from '~/core/model/relations'
+import { Result } from '~/core/result'
 import { DeepPartial } from '~/library/types'
 
 import { Entry, Query, Schema } from '../types'
@@ -6,10 +13,11 @@ import { DATABASE_GLOBAL_KEY } from './bootstrap'
 import { createFieldsProxy } from './fields'
 
 export class Model<T extends Entry> {
-  static collectionName: string
-  static schema: Schema
-  static primaryKey = 'id'
-  static version = 0
+  static readonly collectionName: string
+  static readonly schema: Schema
+  static readonly primaryKey = 'id'
+  static readonly version = 0
+  static readonly relations: Record<string, Relation> = {}
 
   fields: T
   // #fields: T
@@ -54,14 +62,17 @@ export class Model<T extends Entry> {
   }
 
   // TODO: should we notify when fields of relations change?
-  static get<T extends Entry, M extends typeof Model<T>>(
+  static get<T extends Entry, M extends typeof Model<T>, I extends Include<M>>(
     this: M,
     id: string,
-    include?: any
+    include?: I
   ) {
-    return this.collection
-      .get(id)
-      .map((fields) => new this(fields as T) as InstanceType<M>)
+    return this.collection.get(id).switchMap((fields) => {
+      const instance = new this(fields as T) as InstanceType<M>
+      return getRelations(this, instance, include).map((relations) =>
+        Object.assign(instance, relations)
+      )
+    })
   }
 
   static list<T extends Entry, M extends typeof Model<T>>(

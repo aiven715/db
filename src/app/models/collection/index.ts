@@ -5,8 +5,8 @@ import { CollectionEntry, schema } from './schema'
 
 @register
 export class Collection extends Model<CollectionEntry> {
-  static collectionName = 'collections'
-  static schema = schema
+  static readonly collectionName = 'collections'
+  static readonly schema = schema
 
   setName(name: string) {
     this.fields.name = name
