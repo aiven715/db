@@ -58,8 +58,19 @@ const CollectionItem = ({ collectionId }: CollectionItemProps) => {
     <div className='mb-4'>
       <div className='flex items-center py-1 px-2 rounded bg-gray-800 mb-2'>
         {collection.fields.name}
-        <div className='ml-auto'>
-          <button onClick={() => collection.remove()}>⨉</button>
+        <div className='ml-auto text-xs'>
+          <button
+            onClick={() => {
+              const name = prompt('Enter collection name')
+              if (name) {
+                collection.setName(name)
+                collection.save()
+              }
+            }}
+          >
+            [e]
+          </button>
+          <button onClick={() => collection.remove()}>[x]</button>
         </div>
       </div>
       <RequestSpecList collectionId={collection.id} />

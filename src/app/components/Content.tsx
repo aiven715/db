@@ -8,14 +8,20 @@ import { useAppState } from './Root'
 
 export function Content() {
   const { state } = useAppState()
+  const requestSpecId = state.selectedRequestSpecId!
 
   const requestSpec = useModel(
-    'requestSpec',
-    () => RequestSpec.get(state.selectedRequestSpecId!),
-    [state.selectedRequestSpecId]
+    'requestSpecWithCollection',
+    () => RequestSpec.get(requestSpecId, { collection: true }),
+    [requestSpecId]
   )
   return (
     <div className='w-96 mt-2'>
+      {requestSpec.collection && (
+        <div className='text-sm mb-1'>
+          Collection name: {requestSpec.collection.fields.name}
+        </div>
+      )}
       <div className='text-sm mb-1'>Name</div>
       <input
         className='w-full text-black mb-2 rounded px-1'
@@ -41,7 +47,7 @@ export function Content() {
         }}
       />
       <div className='text-sm mb-1'>Body</div>
-      <Body requestSpecId={state.selectedRequestSpecId!} />
+      <Body requestSpecId={requestSpecId} />
     </div>
   )
 }
@@ -56,7 +62,7 @@ const Body = ({ requestSpecId }: BodyProps) => {
     () => RequestSpec.get(requestSpecId),
     [requestSpecId]
   )
-
+  //
   // useEffect(() => {
   //   const spec = RequestSpec.get(requestSpecId, { collection: true }).asValue()
   //   console.log(spec)

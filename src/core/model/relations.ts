@@ -1,3 +1,4 @@
+import { of } from 'rxjs'
 import * as z from 'zod'
 
 import { Result } from '~/core/result'
@@ -69,6 +70,9 @@ export const getRelations = <
       }
       const { Model, foreignKey } = relation
       const id = parentInstance.fields[foreignKey] as string
+      if (id === null) {
+        return new Result(of([key, null! as Model<Entry> | null]))
+      }
       const nestedInclude = typeof include[key] === 'object' ? include[key] : {}
       return Model.get(id, nestedInclude).map((instance) => [key, instance])
     })

@@ -1,4 +1,3 @@
-import { createProxy, isChanged, markToTrack } from 'proxy-compare'
 import {
   useCallback,
   useEffect,
@@ -11,6 +10,11 @@ import { Result } from '~/core/result'
 import { Entry } from '~/core/types'
 
 import { Model } from '../../index'
+import {
+  affectedToPathList,
+  createProxy,
+  isChanged,
+} from '../lib/proxy-compare'
 
 /**
  * ## Requirements
@@ -47,6 +51,11 @@ export const useModel = <T extends Entry, U extends Model<T>>(
     const subscription = retrieve()
       .asObservable()
       .subscribe((nextValue) => {
+        // console.log(
+        //   'changed',
+        //   nextValue,
+        //   affectedToPathList(getValue(), affectedRef.current!)
+        // )
         if (isChanged(getValue(), nextValue, affectedRef.current!)) {
           // TODO: compute nextValue based on current value + affected fields from the nextValue
           setValue(nextValue)
@@ -74,7 +83,6 @@ const useValue = <T extends Entry, U extends Model<T>>(
 ) => {
   const valueRef = useRef<U>()
   const setValue = useCallback((value: U) => {
-    markToTrack(value, true)
     valueRef.current = value
   }, [])
   const getValue = useCallback(() => valueRef.current!, [])
