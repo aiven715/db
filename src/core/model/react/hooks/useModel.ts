@@ -29,6 +29,8 @@ import {
  *  - useModelEffect
  */
 
+//
+
 /**
  * 1. Make sure we're not making props "affected" when they're accessed in the
  * callback.
@@ -58,6 +60,7 @@ export const useModel = <T extends Entry, U extends Model<T>>(
         // )
         if (isChanged(getValue(), nextValue, affectedRef.current!)) {
           // TODO: compute nextValue based on current value + affected fields from the nextValue
+          // (not affected field values should not be changed)
           setValue(nextValue)
           callback()
         }
