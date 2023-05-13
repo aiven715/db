@@ -1,5 +1,6 @@
 import { clone } from 'lodash'
 
+import { Migration } from '~/core/migrations'
 import { Include, Relation, getRelations } from '~/core/model/relations'
 import { DeepPartial } from '~/library/types'
 
@@ -12,7 +13,7 @@ export class Model<T extends Entry> {
   static readonly collectionName: string
   static readonly schema: Schema
   static readonly primaryKey = 'id'
-  static readonly version = 0
+  static readonly migrations: Migration[] = []
   static readonly relations: Record<string, Relation> = {}
 
   fields: T

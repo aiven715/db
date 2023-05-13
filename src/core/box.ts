@@ -1,7 +1,7 @@
 class _Box<T> implements Box<T> {
   private readonly value: T | Promise<T>
 
-  constructor(value: T | Promise<T>) {
+  constructor(value: T | Promise<T> = undefined as T) {
     this.value = value
   }
 
@@ -36,6 +36,17 @@ class _Box<T> implements Box<T> {
   get [Symbol.toStringTag]() {
     return 'Box'
   }
+
+  static all<T>(boxes: Box<T>[]): Box<T[]> {
+    const isSync = boxes.every(
+      (box) => !((box as _Box<T>).value instanceof Promise)
+    )
+    if (isSync) {
+      const values = boxes.map((box) => (box as _Box<T>).value) as T[]
+      return new _Box(values)
+    }
+    return new _Box(Promise.all(boxes))
+  }
 }
 
 export interface Box<T> {
@@ -53,4 +64,6 @@ export interface Box<T> {
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Box = _Box as {
   new <T>(value: T | Promise<T>): Box<T>
+  new (): Box<void>
+  all<T>(boxes: Box<T>[]): Box<T[]>
 }

@@ -1,6 +1,7 @@
 import z from 'zod'
 
 import { Box } from './box'
+import { Migration } from './migrations'
 
 export type Identifier = string
 
@@ -39,8 +40,7 @@ export type DatabaseOptions = {
 
 export type CollectionConfig<T extends Entry = Entry> = {
   primaryKey: keyof T
-  version: number
   schema: Schema
   indexes?: (keyof T)[]
-  // migrations: [];
+  migrations?: Migration[]
 }

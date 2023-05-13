@@ -23,7 +23,7 @@ export const bootstrap = async (options: BootstrapOptions) => {
     collections[Model.collectionName] = {
       schema: Model.schema,
       primaryKey: Model.primaryKey,
-      version: Model.version,
+      migrations: Model.migrations,
     }
   }
 

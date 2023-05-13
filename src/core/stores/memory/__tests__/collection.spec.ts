@@ -8,7 +8,6 @@ type Person = {
 
 const createStoreCollection = () => {
   return new MemoryStoreCollection<Person>({
-    version: 1,
     primaryKey: 'id',
     indexes: ['age'],
   })
