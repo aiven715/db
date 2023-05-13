@@ -1,3 +1,5 @@
+import { clone } from 'lodash'
+
 import { Include, Relation, getRelations } from '~/core/model/relations'
 import { DeepPartial } from '~/library/types'
 
@@ -27,12 +29,16 @@ export class Model<T extends Entry> {
   }
 
   save() {
-    return this.class.collection.update(this.id, this.#patch).then(() => {
-      // FIXME: won't work with async store
-      // once we'll implement returning data in update:
-      // this.#fields = clone(updated)
-      this.#patch = {}
-    })
+    return this.class.collection
+      .update(this.id, clone(this.#patch))
+      .then(() => {
+        // FIXME: won't work with async store
+        // once we'll implement returning data in update:
+        // this.#fields = clone(updated)
+        for (const key in this.#patch) {
+          delete this.#patch[key]
+        }
+      })
   }
 
   remove() {

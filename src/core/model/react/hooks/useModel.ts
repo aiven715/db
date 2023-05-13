@@ -31,12 +31,6 @@ import {
  */
 
 /**
- * ## Bugs
- * 1. When setting the same name to collection, next name changes does not update the UI
- * 2. Relation properties does not update correctly
- */
-
-/**
  * 1. Make sure we're not making props "affected" when they're accessed in the
  * callback.
  * 2. Make sure nothing missed from "useSnapshot" Valtio implementation.
