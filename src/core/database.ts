@@ -21,6 +21,8 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
     createStore: (options: O) => Promise<Store>
   ) {
     const store = await createStore(extendWithMetaCollection(options))
+    // TODO: Option 1. use another store in a non-leader tab (for instance MemorySync + BroadcastChannelStore)
+    // TODO: Option 2. use another reactive store (which decorates original reactive store) in a non-leader tab (with MemorySync + BroadcastChannelStore)
     const reactiveStore = new ReactiveStore(store)
 
     const migrations = [] as Promise<void>[]

@@ -21,13 +21,12 @@ export interface Store {
   get(collection: string, identifier: string): Box<Entry>
   // TODO: store should return data on create and update? to avoid
   // extra get in async stores
-  create(collection: string, document: Entry): Box<void>
-  // TODO: rename to set
   set(
     collection: string,
     identifier: string,
     document: Partial<Entry>
   ): Box<void>
+  create(collection: string, document: Entry): Box<void>
   remove(collection: string, identifier: string): Box<void>
 }
 
