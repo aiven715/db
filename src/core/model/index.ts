@@ -29,16 +29,14 @@ export class Model<T extends Entry> {
   }
 
   save() {
-    return this.class.collection
-      .update(this.id, clone(this.#patch))
-      .then(() => {
-        // FIXME: won't work with async store
-        // once we'll implement returning data in update:
-        // this.#fields = clone(updated)
-        for (const key in this.#patch) {
-          delete this.#patch[key]
-        }
-      })
+    return this.class.collection.set(this.id, clone(this.#patch)).then(() => {
+      // FIXME: won't work with async store
+      // once we'll implement returning data in update:
+      // this.#fields = clone(updated)
+      for (const key in this.#patch) {
+        delete this.#patch[key]
+      }
+    })
   }
 
   remove() {
