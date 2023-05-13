@@ -58,7 +58,7 @@ export const getRelations = <
   I extends Include<M>
 >(
   ParentModel: M,
-  parentInstance: InstanceType<M>,
+  fields: InstanceType<M>['fields'],
   include: I = {} as I
 ): Result<RelationInstances<M, I>> => {
   const items = Object.entries(include)
@@ -69,7 +69,7 @@ export const getRelations = <
         throw new Error(`Relation "${key}" not found`)
       }
       const { Model, foreignKey } = relation
-      const id = parentInstance.fields[foreignKey] as string
+      const id = fields[foreignKey] as string
       if (id === null) {
         return new Result(of([key, null! as Model<Entry> | null]))
       }

@@ -55,17 +55,16 @@ export class Model<T extends Entry> {
     return database
   }
 
-  // TODO: should we notify when fields of relations change?
   static get<T extends Entry, M extends typeof Model<T>, I extends Include<M>>(
     this: M,
     id: string,
     include?: I
   ) {
     return this.collection.get(id).switchMap((fields) => {
-      const instance = new this(fields as T) as InstanceType<M>
-      return getRelations(this, instance, include).map((relations) =>
-        Object.assign(instance, relations)
-      )
+      return getRelations(this, fields as T, include).map((relations) => {
+        const instance = new this(fields as T) as InstanceType<M>
+        return Object.assign(instance, relations)
+      })
     })
   }
 

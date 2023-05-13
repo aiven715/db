@@ -30,7 +30,11 @@ import {
  *  - useModelEffect
  */
 
-//
+/**
+ * ## Bugs
+ * 1. When setting the same name to collection, next name changes does not update the UI
+ * 2. Relation properties does not update correctly
+ */
 
 /**
  * 1. Make sure we're not making props "affected" when they're accessed in the
@@ -55,17 +59,6 @@ export const useModel = <T extends Entry, U extends Model<T>>(
       .asObservable()
       .pipe(skip(1))
       .subscribe((nextValue) => {
-        // debug(key, {
-        //   nextValue,
-        //   paths: affectedToPathList(getValue(), affectedRef.current!),
-        // })
-        debug(
-          key,
-          'sub',
-          affectedRef.current,
-          { value: getValue() }
-          // JSON.stringify(affectedToPathList(getValue(), affectedRef.current!))
-        )
         if (isChanged(getValue(), nextValue, affectedRef.current!)) {
           // TODO: compute nextValue based on current value + affected fields from the nextValue
           // (not affected field values should not be changed)
@@ -81,10 +74,6 @@ export const useModel = <T extends Entry, U extends Model<T>>(
   useEffect(() => {
     affectedRef.current = affected
   })
-
-  // setInterval(() => {
-  //   debug(key, affectedRef.current!)
-  // }, 1000)
 
   const snapshot = useSyncExternalStore(subscribe, getValue)
   // eslint-disable-next-line react-hooks/exhaustive-deps

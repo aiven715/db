@@ -48,7 +48,7 @@ export function Content() {
         }}
       />
       <div className='text-sm mb-1'>Body</div>
-      {/*<Body requestSpecId={requestSpecId} />*/}
+      <Body requestSpecId={requestSpecId} />
     </div>
   )
 }
