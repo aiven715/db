@@ -5,6 +5,7 @@ import {
   useRef,
   useSyncExternalStore,
 } from 'react'
+import { skip } from 'rxjs'
 
 import { Result } from '~/core/result'
 import { Entry } from '~/core/types'
@@ -52,12 +53,19 @@ export const useModel = <T extends Entry, U extends Model<T>>(
   const subscribe = useCallback((callback: VoidFunction) => {
     const subscription = retrieve()
       .asObservable()
+      .pipe(skip(1))
       .subscribe((nextValue) => {
-        // console.log(
-        //   'changed',
+        // debug(key, {
         //   nextValue,
-        //   affectedToPathList(getValue(), affectedRef.current!)
-        // )
+        //   paths: affectedToPathList(getValue(), affectedRef.current!),
+        // })
+        debug(
+          key,
+          'sub',
+          affectedRef.current,
+          { value: getValue() }
+          // JSON.stringify(affectedToPathList(getValue(), affectedRef.current!))
+        )
         if (isChanged(getValue(), nextValue, affectedRef.current!)) {
           // TODO: compute nextValue based on current value + affected fields from the nextValue
           // (not affected field values should not be changed)
@@ -73,6 +81,10 @@ export const useModel = <T extends Entry, U extends Model<T>>(
   useEffect(() => {
     affectedRef.current = affected
   })
+
+  // setInterval(() => {
+  //   debug(key, affectedRef.current!)
+  // }, 1000)
 
   const snapshot = useSyncExternalStore(subscribe, getValue)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,4 +110,10 @@ const useValue = <T extends Entry, U extends Model<T>>(
     setValue(init())
   }
   return [getValue, setValue] as const
+}
+
+const debug = (key: string, ...values: unknown[]) => {
+  if (key === 'requestSpecWithCollection') {
+    console.log(...values)
+  }
 }

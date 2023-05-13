@@ -15,6 +15,7 @@ export function Content() {
     () => RequestSpec.get(requestSpecId, { collection: true }),
     [requestSpecId]
   )
+
   return (
     <div className='w-96 mt-2'>
       {requestSpec.collection && (
@@ -47,7 +48,7 @@ export function Content() {
         }}
       />
       <div className='text-sm mb-1'>Body</div>
-      <Body requestSpecId={requestSpecId} />
+      {/*<Body requestSpecId={requestSpecId} />*/}
     </div>
   )
 }

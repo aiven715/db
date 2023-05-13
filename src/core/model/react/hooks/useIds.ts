@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { skip } from 'rxjs'
 import { distinctUntilChanged } from 'rxjs/operators'
 
 import { Result } from '~/core/result'
@@ -18,6 +19,7 @@ export const useIds = <T extends { id: string }>(
     const subscription = result
       .asObservable()
       .pipe(
+        skip(1),
         distinctUntilChanged((prev, current) => prev.length === current.length)
       )
       .subscribe((items) => setItems(items.map((item) => item.id)))
