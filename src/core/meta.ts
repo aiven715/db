@@ -34,15 +34,23 @@ export const extendWithMetaCollection = <O extends DatabaseOptions>(
 }
 
 export const getVersion = (store: Store) => {
-  return store
-    .get(COLLECTION_NAME, VERSION_ID)
-    .then((entry) => (entry as MetaEntry)?.data.version)
-    .catch((err) => {
-      if (err instanceof NotFoundError) {
-        return 0
-      }
-      throw err
-    })
+  const handleDefault = (err: unknown) => {
+    if (err instanceof NotFoundError) {
+      return 0
+    }
+    throw err
+  }
+
+  // TODO: remove try/catch once we'll implement catching
+  // errors in sync Box
+  try {
+    return store
+      .get(COLLECTION_NAME, VERSION_ID)
+      .then((entry) => (entry as MetaEntry)?.data.version)
+      .catch(handleDefault)
+  } catch (err) {
+    return handleDefault(err)
+  }
 }
 
 export const setVersion = (store: Store, version: number) => {

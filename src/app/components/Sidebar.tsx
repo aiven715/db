@@ -100,12 +100,8 @@ const RequestSpecList = ({ collectionId }: RequestSpecListProps) => {
             const name = prompt('Enter request name')
             if (name) {
               RequestSpec.create({
-                id: uuid(),
                 collectionId: collectionId || null,
                 name,
-                method: 'GET',
-                url: '',
-                body: '',
               })
             }
           }}
