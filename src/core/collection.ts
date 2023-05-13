@@ -26,11 +26,13 @@ export class Collection<T extends Entry = Entry> {
   }
 
   create(entry: T) {
-    return this.reactiveStore.create(this.name, entry)
+    const parsed = this.config.schema.parse(entry) as T
+    return this.reactiveStore.create(this.name, parsed)
   }
 
   set(id: string, slice: Partial<T>) {
-    return this.reactiveStore.set(this.name, id, slice)
+    const parsed = this.config.schema.partial().parse(slice) as Partial<T>
+    return this.reactiveStore.set(this.name, id, parsed)
   }
 
   remove(id: string) {
