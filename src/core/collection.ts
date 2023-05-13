@@ -29,7 +29,7 @@ export class Collection<T extends Entry = Entry> {
     return this.reactiveStore.create(this.name, entry)
   }
 
-  update(id: string, slice: Partial<T>) {
+  set(id: string, slice: Partial<T>) {
     return this.reactiveStore.set(this.name, id, slice)
   }
 
