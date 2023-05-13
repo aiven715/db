@@ -31,8 +31,8 @@ export class MemoryStore implements Store {
     return this.collection(collection).create(document)
   }
 
-  update(collection: string, identifier: string, document: Partial<Entry>) {
-    return this.collection(collection).update(identifier, document)
+  set(collection: string, identifier: string, document: Partial<Entry>) {
+    return this.collection(collection).set(identifier, document)
   }
 
   remove(collection: string, identifier: string) {

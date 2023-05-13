@@ -22,7 +22,7 @@ export interface Store {
   // extra get in async stores
   create(collection: string, document: Entry): Box<void>
   // TODO: rename to set
-  update(
+  set(
     collection: string,
     identifier: string,
     document: Partial<Entry>

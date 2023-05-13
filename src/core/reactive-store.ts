@@ -39,8 +39,8 @@ export class ReactiveStore {
       .then(() => this.notifyQueries(collection))
   }
 
-  update(collection: string, id: string, slice: Partial<Entry>): Box<void> {
-    return this.store.update(collection, id, slice).then(() => {
+  set(collection: string, id: string, slice: Partial<Entry>): Box<void> {
+    return this.store.set(collection, id, slice).then(() => {
       this.notifyQueries(collection)
       this.notifyEntry(collection, id)
     })

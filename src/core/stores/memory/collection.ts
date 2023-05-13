@@ -84,7 +84,7 @@ export class MemoryStoreCollection<T extends Entry = Entry> {
     return new Box(void 0)
   }
 
-  update(identifier: string, change: Partial<T>) {
+  set(identifier: string, change: Partial<T>) {
     const document = this.documents.get(identifier)
     if (!document) {
       throw new NotFoundError(identifier)

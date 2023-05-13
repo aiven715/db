@@ -31,11 +31,7 @@ export class IndexedDBStore implements Store {
     // TODO: report creation to sync
   }
 
-  async update(
-    collection: string,
-    identifier: string,
-    document: Partial<Entry>
-  ) {
+  async set(collection: string, identifier: string, document: Partial<Entry>) {
     const binary = await this.idb.get(collection, identifier)
     const updated = update(binary, document)
     await this.idb.set(collection, identifier, updated)

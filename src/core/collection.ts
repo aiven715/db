@@ -30,7 +30,7 @@ export class Collection<T extends Entry = Entry> {
   }
 
   update(id: string, slice: Partial<T>) {
-    return this.reactiveStore.update(this.name, id, slice)
+    return this.reactiveStore.set(this.name, id, slice)
   }
 
   remove(id: string) {

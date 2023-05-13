@@ -25,9 +25,3 @@ export class RequestSpec extends Model<RequestSpecEntry> {
     this.fields.body = body
   }
 }
-
-// const spec = RequestSpec.get('1', {
-//   collection: true,
-// }).asValue()
-// //
-// const collection = spec.collection

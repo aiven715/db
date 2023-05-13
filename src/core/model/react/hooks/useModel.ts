@@ -11,11 +11,7 @@ import { Result } from '~/core/result'
 import { Entry } from '~/core/types'
 
 import { Model } from '../../index'
-import {
-  affectedToPathList,
-  createProxy,
-  isChanged,
-} from '../lib/proxy-compare'
+import { createProxy, isChanged } from '../lib/proxy-compare'
 
 /**
  * ## Requirements
@@ -93,10 +89,4 @@ const useValue = <T extends Entry, U extends Model<T>>(
     setValue(init())
   }
   return [getValue, setValue] as const
-}
-
-const debug = (key: string, ...values: unknown[]) => {
-  if (key === 'requestSpecWithCollection') {
-    console.log(...values)
-  }
 }
