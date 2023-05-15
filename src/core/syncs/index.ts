@@ -1,8 +1,8 @@
+import { Box } from '~/core/box'
+
 export interface Sync {
-  commit(): void
-  pull(): void
-  push(): void
-  // for auto-save
-  // unstage(): void
-  // rollback(): void
+  // might be not needed
+  commit(): Box<void>
+  pull(): Promise<void>
+  push(): Promise<void>
 }

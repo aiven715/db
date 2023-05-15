@@ -1,3 +1,5 @@
+import z from 'zod'
+
 import { MemoryStoreCollection } from '../collection'
 
 type Person = {
@@ -9,6 +11,11 @@ type Person = {
 const createStoreCollection = () => {
   return new MemoryStoreCollection<Person>({
     primaryKey: 'id',
+    schema: z.object({
+      id: z.string(),
+      name: z.string(),
+      age: z.number(),
+    }),
     indexes: ['age'],
   })
 }

@@ -1,4 +1,4 @@
-import { DatabaseOptions, Entry, Query, Store, Sync } from '../../types'
+import { DatabaseOptions, Entry, Query, Store } from '../../types'
 
 import { MemoryStoreCollection } from './collection'
 
@@ -7,8 +7,7 @@ export class MemoryStore implements Store {
 
   constructor(
     private options: DatabaseOptions,
-    initialData?: Record<string, Entry[]>,
-    sync?: Sync
+    initialData?: Record<string, Entry[]>
   ) {
     for (const collectionName in options.collections) {
       const config = options.collections[collectionName]

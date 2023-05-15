@@ -1,17 +1,21 @@
-import get from 'lodash/get'
 import isEqual from 'lodash/isEqual'
 import { ReplaySubject } from 'rxjs'
-import { distinctUntilChanged, map } from 'rxjs/operators'
+import { distinctUntilChanged } from 'rxjs/operators'
 
 import { Box } from './box'
 import { Result } from './result'
+import { Sync } from './syncs'
 import { Entry, Query, Store } from './types'
 
+// TODO: draw diagram for multi-instance
+// ReactiveStore = Store, ChangeStream(for self and external changes)
+// ChangeStream(change, subscribe(or subscribeQuery/subscribeEntry)) = self change, ExternalChange[] (sync, another instance)
 export class ReactiveStore {
   private queries = new Map<string, ReplaySubject<Entry[]>>()
   private entries = new Map<string, ReplaySubject<Entry>>()
 
-  constructor(private store: Store) {}
+  // TODO: work with Sync here or in Collection
+  constructor(private store: Store, private sync?: Sync) {}
 
   list(collection: string, query?: Query): Result<Entry[]> {
     const querySubject = this.getOrCreateQuerySubject(collection, query)
@@ -20,35 +24,38 @@ export class ReactiveStore {
     return new Result(querySubject.pipe(distinctUntilChanged(isEqual)))
   }
 
-  // TODO: should return what fields were updated via Symbol
-  // TODO: remove path argument
-  get(collection: string, id: string, path?: string | string[]) {
+  get(collection: string, id: string) {
     const entrySubject = this.getOrCreateEntrySubject(collection, id)
     this.store.get(collection, id).then((item) => entrySubject.next(item))
-    return new Result(
-      entrySubject.pipe(
-        map((entry) => (path ? get(entry, path) : entry)),
-        distinctUntilChanged(isEqual)
-      )
-    )
+    return new Result(entrySubject.pipe(distinctUntilChanged(isEqual)))
   }
 
   create<T extends Entry>(collection: string, entry: T): Box<void> {
-    return this.store
-      .create(collection, entry)
-      .then(() => this.notifyQueries(collection))
+    return (
+      this.store
+        .create(collection, entry)
+        // TODO: where and how to push if sync is enabled?
+        // this.realtimeSync?.change() // when sync: true - commit & push otherwise - commit
+        // this.externalSource?.change() // when sync: true - commit & push otherwise - commit
+        .then(() => this.sync?.commit())
+        .then(() => this.notifyQueries(collection))
+    )
   }
 
   set(collection: string, id: string, slice: Partial<Entry>): Box<void> {
-    return this.store.set(collection, id, slice).then(() => {
-      this.notifyQueries(collection)
-      this.notifyEntry(collection, id)
-    })
+    return this.store
+      .set(collection, id, slice)
+      .then(() => this.sync?.commit())
+      .then(() => {
+        this.notifyQueries(collection)
+        this.notifyEntry(collection, id)
+      })
   }
 
   remove(collection: string, id: string): Box<void> {
     return this.store
       .remove(collection, id)
+      .then(() => this.sync?.commit())
       .then(() => this.notifyQueries(collection))
   }
 

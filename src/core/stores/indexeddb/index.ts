@@ -1,18 +1,13 @@
 import { deserialize, serialize, update } from '~/core/automerge'
 
-import { DatabaseOptions, Entry, Query, Store, Sync } from '../../types'
+import { DatabaseOptions, Entry, Query, Store } from '../../types'
 
 import { Idb } from './idb'
 
 // TODO: implement indexes support
 // TODO: implement query support
 export class IndexedDBStore implements Store {
-  constructor(
-    private options: DatabaseOptions,
-    private idb: Idb,
-    // TODO: sync should be required
-    private sync?: Sync
-  ) {}
+  constructor(private options: DatabaseOptions, private idb: Idb) {}
 
   async list(collection: string, query?: Query) {
     const binaries = await this.idb.list(collection)
@@ -28,27 +23,24 @@ export class IndexedDBStore implements Store {
     const identifier = this.identifier(document, collection)
     const binary = serialize(document)
     await this.idb.set(collection, identifier, binary)
-    // TODO: report creation to sync
   }
 
   async set(collection: string, identifier: string, document: Partial<Entry>) {
     const binary = await this.idb.get(collection, identifier)
     const updated = update(binary, document)
     await this.idb.set(collection, identifier, updated)
-    // TODO: report update to sync
   }
 
   async remove(collection: string, identifier: string) {
     await this.idb.remove(collection, identifier)
-    // TODO: report deletion to sync
   }
 
   private identifier(document: Entry, collection: string) {
     return document[this.options.collections[collection].primaryKey] as string
   }
 
-  static async create(options: DatabaseOptions, sync?: Sync) {
+  static async create(options: DatabaseOptions) {
     const idb = await Idb.create(options)
-    return new IndexedDBStore(options, idb, sync)
+    return new IndexedDBStore(options, idb)
   }
 }

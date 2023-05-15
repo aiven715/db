@@ -30,8 +30,6 @@ export interface Store {
   remove(collection: string, identifier: string): Box<void>
 }
 
-export interface Sync {}
-
 export type DatabaseOptions = {
   name: string
   collections: Record<string, CollectionConfig>
