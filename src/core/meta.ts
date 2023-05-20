@@ -4,7 +4,10 @@ import { NotFoundError } from '~/core/errors'
 
 import { CollectionConfig, DatabaseOptions, Store } from './types'
 
-// TODO: store ids of deleted documents
+// TODO: have "meta" helper function which takes store and provides a simple interface
+// working with meta collection as a singleton
+
+// TODO: store ids of deleted documents for the sync
 
 const VERSION_ID = 'version'
 const versionSchema = z.object({
