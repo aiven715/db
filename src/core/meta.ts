@@ -4,6 +4,8 @@ import { NotFoundError } from '~/core/errors'
 
 import { CollectionConfig, DatabaseOptions, Store } from './types'
 
+// TODO: store ids of deleted documents
+
 const VERSION_ID = 'version'
 const versionSchema = z.object({
   version: z.number(),

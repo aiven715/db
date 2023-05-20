@@ -1,5 +1,7 @@
 import z from 'zod'
 
+import { ChangeStream } from '~/core/change-stream'
+
 import { Collection } from './collection'
 import { extendWithMetaCollection } from './meta'
 import { migrate } from './migrations'
@@ -26,11 +28,14 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
     // TODO: Option 2. use another reactive store (which decorates original reactive store) in a non-leader tab (with MemorySync + BroadcastChannelStore)
     // TODO: Option 3. use another store and sync in a non-leader tab
     // TODO: Option 4. use another store and real-time sync in a non-leader tab
-    const reactiveStore = new ReactiveStore(store)
+
+    const changeStream = new ChangeStream()
+    const reactiveStore = new ReactiveStore(store, changeStream)
 
     const migrations = [] as Promise<void>[]
     const collections = {} as CollectionMap<O>
     for (const [name, config] of Object.entries(options.collections)) {
+      // TODO: move migrations to Collection.create
       migrations.push(migrate(name, config, store))
       collections[name as keyof CollectionMap<O>] = new Collection(
         name,
