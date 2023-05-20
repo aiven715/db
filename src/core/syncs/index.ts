@@ -1,52 +1,48 @@
-import { Box } from '~/core/box'
-import { Entry } from '~/core/types'
+import { Store } from '~/core/types'
 
-class ChangeStream {}
-class ChangeBroadcast {}
-
-class SyncState {}
+import { ChangeEvent, ChangeStream } from '../change-stream'
 
 export interface Sync {
-  // might be not needed
-  // commit(): Box<void>
-
   // TODO: can be specific to HttpSync
   // pull(): Promise<void>
   // push(): Promise<void>
-
-  //
-  start(): Promise<void>
-  stop(): Promise<void>
-  send(items: Entry[]): Promise<void>
+  start(collection: string, store: Store, changeStream: ChangeStream): void
+  stop(collection: string): void
 }
 
-interface Event {
-  type: 'create' | 'update' | 'remove'
-  payload: {}
-}
+export class HttpSync implements Sync {
+  private interval: NodeJS.Timeout | null = null
+  private httpClient: any
 
-class HttpSync implements Sync {
-  interval: NodeJS.Timeout | null = null
-  private httpClient: HttpClient
+  // Sync implementation should always have dedicated Store implementation?
 
-  start(receive: (events: Event[], getCheckpoint: () => {}) => void) {
+  // Consider having ability to use abstract Store together with abstract Sync (ex. AutomergeStore with RxDBSync)
+  // How to transfer information about offline changes between abstract Store and Sync?
+
+  // for rxdb integration, we'll implement Store adapter around LokiJS and Sync adapter around RxDBSync
+  start(collection: string, store: Store, changeStream: ChangeStream) {
+    // TODO: do pull and push on start
+
+    // TODO: how not to miss changeEvents when offline?
+
+    // TODO: filter changes from pull
+    changeStream.observable(collection).subscribe((changeEvent) => {
+      // TODO: how to handle batch events? (when going from offline to online)
+      this.httpClient.post('/sync', [changeEvent.entry])
+    })
+
     this.interval = setInterval(() => {
-      this.httpClient.get('/sync').then((items) => {
+      this.httpClient.get('/sync').then((items: any) => {
         const events = items
-        receive(events)
+        changeStream.change(collection, null! as ChangeEvent)
       })
     }, 10000)
   }
 
-  stop() {
+  stop(collection: string) {
     if (this.interval) {
       clearInterval(this.interval)
     }
-  }
-
-  send(events: Event[]): Promise<void> {
-    const items = events
-    this.httpClient.post('/sync', items)
   }
 }
 

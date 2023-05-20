@@ -63,7 +63,7 @@ export class ReactiveStore {
       return
     }
     const subscription = this.changeStream
-      .getOrCreateCollectionSubject(collection)
+      .observable(collection)
       .subscribe((changeEvent) => {
         this.notifyQueries(collection)
         if (changeEvent.type === ChangeEventType.Update) {

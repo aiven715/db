@@ -5,7 +5,17 @@ import { Entry } from './types'
 export class ChangeStream {
   private subjects = new Map<string, Subject<ChangeEvent>>()
 
-  getOrCreateCollectionSubject(collection: string) {
+  observable(collection: string) {
+    const subject = this.getOrCreateCollectionSubject(collection)
+    return subject.asObservable()
+  }
+
+  change(collection: string, event: ChangeEvent) {
+    const subject = this.getOrCreateCollectionSubject(collection)
+    subject.next(event)
+  }
+
+  private getOrCreateCollectionSubject(collection: string) {
     const subject = this.subjects.get(collection)
     if (subject) {
       return subject
@@ -13,11 +23,6 @@ export class ChangeStream {
     const newSubject = new Subject<ChangeEvent>()
     this.subjects.set(collection, newSubject)
     return newSubject
-  }
-
-  change(collection: string, event: ChangeEvent) {
-    const subject = this.getOrCreateCollectionSubject(collection)
-    subject.next(event)
   }
 }
 

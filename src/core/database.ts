@@ -6,6 +6,7 @@ import { Collection } from './collection'
 import { extendWithMetaCollection } from './meta'
 import { migrate } from './migrations'
 import { ReactiveStore } from './reactive-store'
+import { Sync } from './syncs'
 import { DatabaseOptions, Store } from './types'
 
 type CollectionMap<O extends DatabaseOptions> = {
@@ -29,7 +30,9 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
     // TODO: Option 3. use another store and sync in a non-leader tab
     // TODO: Option 4. use another store and real-time sync in a non-leader tab
 
+    // Can it be a part of a public API?
     const changeStream = new ChangeStream()
+    const sync = null! as Sync
     const reactiveStore = new ReactiveStore(store, changeStream)
 
     const migrations = [] as Promise<void>[]
