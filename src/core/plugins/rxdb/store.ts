@@ -1,4 +1,5 @@
 import { NotFoundError } from '~/core/errors'
+import { DELETED_KEY } from '~/core/plugins/rxdb/constants'
 
 import { LokiJSStore } from '../../stores/lokijs'
 import { DatabaseOptions, Entry, Query } from '../../types'
@@ -41,5 +42,3 @@ export class RxDBLokiJSStore extends LokiJSStore {
     return super.create(options, adapter)
   }
 }
-
-const DELETED_KEY = '_deleted'
