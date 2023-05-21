@@ -12,7 +12,7 @@ import {
 } from './utils'
 
 export class LokiJSStore implements Store {
-  private constructor(private options: DatabaseOptions, private loki: Loki) {}
+  protected constructor(private options: DatabaseOptions, private loki: Loki) {}
 
   list(collection: string, query?: Query): Box<Entry[]> {
     const lokiCollection = this.getLokiCollection(collection)
