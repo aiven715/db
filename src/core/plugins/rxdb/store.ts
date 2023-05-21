@@ -9,10 +9,7 @@ export class RxDBLokiJSStore extends LokiJSStore {
   list(collection: string, query?: Query) {
     return super.list(collection, {
       ...query,
-      filter: {
-        ...query?.filter,
-        [DELETED_KEY]: false,
-      },
+      filter: { ...query?.filter, [DELETED_KEY]: false },
     })
   }
 
