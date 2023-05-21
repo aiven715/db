@@ -16,23 +16,28 @@ root.render(
   </DatabaseBootstrap>
 )
 
-RxDBLokiJSStore.create({
-  name: 'pie.db',
-  collections: {
-    requestspecs: {
-      primaryKey: 'id',
-      schema: z.object({
-        id: z.string().default(() => uuid()),
-        collectionId: z.string().or(z.null()).default(null),
-        name: z.string(),
-        method: z.string().default('GET'),
-        url: z.string().default(''),
-      }),
-      migrations: new Array(15).fill(null),
-    },
-  },
-}).then((store) => {
-  store.list('requestspecs').then((list) => {
-    console.log(list)
-  })
-})
+// RxDBLokiJSStore.create({
+//   name: 'pie.db',
+//   collections: {
+//     requestspecs: {
+//       primaryKey: 'id',
+//       schema: z.object({
+//         id: z.string().default(() => uuid()),
+//         collectionId: z.string().or(z.null()).default(null),
+//         name: z.string(),
+//         method: z.string().default('GET'),
+//         url: z.string().default(''),
+//       }),
+//       migrations: new Array(15).fill(null),
+//     },
+//   },
+// }).then((store) => {
+//   store
+//     .list('requestspecs', {
+//       limit: 20,
+//       sort: { key: 'orderKey', direction: 'asc' },
+//     })
+//     .then((list) => {
+//       console.log(list)
+//     })
+// })

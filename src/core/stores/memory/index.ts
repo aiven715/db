@@ -2,6 +2,7 @@ import { DatabaseOptions, Entry, Query, Store } from '../../types'
 
 import { MemoryStoreCollection } from './collection'
 
+// TODO: should clone input from the user?
 export class MemoryStore implements Store {
   private collections = new Map<string, MemoryStoreCollection>()
 

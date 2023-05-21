@@ -9,6 +9,7 @@ export const createLokiDatabase = (options: DatabaseOptions): Promise<Loki> =>
     const loki = new Loki(options.name, {
       adapter: new LokiIncrementalIndexedDBAdapter(),
       autoload: true,
+      throttledSaves: true,
       autoloadCallback: () => {
         for (const collection in options.collections) {
           const config = options.collections[collection]

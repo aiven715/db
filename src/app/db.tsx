@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { bootstrap } from '~/core/model/bootstrap'
+import { RxDBLokiJSStore } from '~/core/plugins/rxdb/store'
 import { IndexedDBStore } from '~/core/stores/indexeddb'
 import { MemorySyncStore } from '~/core/stores/memory-sync'
 
@@ -24,12 +25,13 @@ export const DatabaseBootstrap = ({
 
 async function init() {
   await bootstrap({
-    databaseName: 'app',
-    createStore: async (options) =>
-      await MemorySyncStore.create(
-        options,
-        await IndexedDBStore.create(options)
-      ),
+    databaseName: 'pie.db',
+    createStore: async (options) => await RxDBLokiJSStore.create(options),
+    // createStore: async (options) =>
+    //   await MemorySyncStore.create(
+    //     options,
+    //     await IndexedDBStore.create(options)
+    //   ),
   })
   // const [todo] = Todo.list().asValue();
   // console.log(todo);

@@ -1,7 +1,9 @@
 import Loki from 'lokijs'
 
 import { Box } from '~/core/box'
+import { NotFoundError } from '~/core/errors'
 import { DatabaseOptions, Entry, Query, Store } from '~/core/types'
+import { mergeObjects } from '~/library/utils'
 
 import {
   createLokiDatabase,
@@ -14,28 +16,65 @@ export class RxDBLokiJSStore implements Store {
 
   list(collection: string, query?: Query): Box<Entry[]> {
     const lokiCollection = this.getLokiCollection(collection)
-    const results = lokiCollection.find(createLokiQuery(query))
-    return new Box(results)
+    let results = lokiCollection.chain().find(createLokiQuery(query))
+    if (query?.limit) {
+      results = results.limit(query.limit)
+    }
+    if (query?.offset) {
+      results = results.offset(query.offset)
+    }
+    if (query?.sort) {
+      results = results.simplesort(query.sort.key, {
+        desc: query.sort.direction === 'desc',
+      })
+    }
+    return new Box(results.data())
   }
 
   get(collection: string, identifier: string): Box<Entry> {
-    throw new Error('Method not implemented.')
+    const lokiCollection = this.getLokiCollection(collection)
+    const primaryKey = this.getPrimaryKey(collection)
+    const entry = lokiCollection.findOne({ [primaryKey]: identifier })
+    if (!entry) {
+      throw new NotFoundError(identifier)
+    }
+    return new Box(entry)
   }
 
   create(collection: string, document: Entry): Box<void> {
-    throw new Error('Method not implemented.')
+    const lokiCollection = this.getLokiCollection(collection)
+    lokiCollection.insert(document)
+    this.loki.save()
+    return new Box()
   }
 
   set(
     collection: string,
     identifier: string,
-    document: Partial<Entry>
+    slice: Partial<Entry>
   ): Box<void> {
-    throw new Error('Method not implemented.')
+    const lokiCollection = this.getLokiCollection(collection)
+    const primaryKey = this.getPrimaryKey(collection)
+    const entry = lokiCollection.findOne({ [primaryKey]: identifier })
+    if (!entry) {
+      throw new NotFoundError(identifier)
+    }
+    lokiCollection.update(mergeObjects(entry, slice))
+    this.loki.save()
+    return new Box()
   }
 
   remove(collection: string, identifier: string): Box<void> {
-    throw new Error('Method not implemented.')
+    const lokiCollection = this.getLokiCollection(collection)
+    const primaryKey = this.getPrimaryKey(collection)
+    const entry = lokiCollection.findOne({ [primaryKey]: identifier })
+    lokiCollection.remove(entry)
+    this.loki.save()
+    return new Box()
+  }
+
+  private getPrimaryKey(collection: string) {
+    return this.options.collections[collection].primaryKey
   }
 
   private getLokiCollection(collection: string) {

@@ -39,7 +39,7 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
     const collections = {} as CollectionMap<O>
     for (const [name, config] of Object.entries(options.collections)) {
       // TODO: move migrations to Collection.create
-      migrations.push(migrate(name, config, store))
+      // migrations.push(migrate(name, config, store))
       collections[name as keyof CollectionMap<O>] = new Collection(
         name,
         config,
