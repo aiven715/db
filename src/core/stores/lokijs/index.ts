@@ -11,7 +11,7 @@ import {
   getLokiCollectionName,
 } from './utils'
 
-export class RxDBLokiJSStore implements Store {
+export class LokiJSStore implements Store {
   private constructor(private options: DatabaseOptions, private loki: Loki) {}
 
   list(collection: string, query?: Query): Box<Entry[]> {
@@ -28,7 +28,8 @@ export class RxDBLokiJSStore implements Store {
         desc: query.sort.direction === 'desc',
       })
     }
-    return new Box(results.data())
+    const items = results.data()
+    return new Box(items)
   }
 
   get(collection: string, identifier: string): Box<Entry> {
@@ -83,8 +84,11 @@ export class RxDBLokiJSStore implements Store {
     return this.loki.getCollection(name)
   }
 
-  static async create(options: DatabaseOptions) {
-    const loki = await createLokiDatabase(options)
+  static async create(
+    options: DatabaseOptions,
+    adapter?: LokiPersistenceAdapter
+  ) {
+    const loki = await createLokiDatabase(options, adapter)
     return new this(options, loki)
   }
 }

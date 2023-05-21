@@ -2,12 +2,12 @@ import Loki from 'lokijs'
 
 import { CollectionConfig, DatabaseOptions, Query } from '~/core/types'
 
-const LokiIncrementalIndexedDBAdapter = require('lokijs/src/incremental-indexeddb-adapter')
-
-export const createLokiDatabase = (options: DatabaseOptions): Promise<Loki> =>
+export const createLokiDatabase = (
+  options: DatabaseOptions,
+  adapter?: LokiPersistenceAdapter
+): Promise<Loki> =>
   new Promise((resolve) => {
     const loki = new Loki(options.name, {
-      adapter: new LokiIncrementalIndexedDBAdapter(),
       autoload: true,
       throttledSaves: true,
       autoloadCallback: () => {
@@ -24,6 +24,7 @@ export const createLokiDatabase = (options: DatabaseOptions): Promise<Loki> =>
         }
         resolve(loki)
       },
+      ...(adapter && { adapter }),
     })
   })
 
