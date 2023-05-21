@@ -9,5 +9,5 @@ export const schema = z.object({
   name: z.string(),
   method: z.string().default('GET'),
   url: z.string().default(''),
-  body: z.string().default(''),
+  // body: z.string().default(''),
 })

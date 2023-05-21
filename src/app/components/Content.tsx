@@ -73,16 +73,18 @@ const Body = ({ requestSpecId }: BodyProps) => {
   //   console.log('spec body')
   // }, [requestSpec])
 
-  return (
-    <textarea
-      className='w-full h-48 text-black rounded p-1'
-      placeholder='Body'
-      value={requestSpec.fields.body}
-      onChange={(e) => {
-        const value = e.target.value
-        requestSpec.setBody(value)
-        requestSpec.save()
-      }}
-    />
-  )
+  return null
+
+  // return (
+  //   <textarea
+  //     className='w-full h-48 text-black rounded p-1'
+  //     placeholder='Body'
+  //     value={requestSpec.fields.body}
+  //     onChange={(e) => {
+  //       const value = e.target.value
+  //       requestSpec.setBody(value)
+  //       requestSpec.save()
+  //     }}
+  //   />
+  // )
 }

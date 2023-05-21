@@ -20,8 +20,8 @@ export class RequestSpec extends Model<RequestSpecEntry> {
   setUrl(url: string) {
     this.fields.url = url
   }
-
-  setBody(body: string) {
-    this.fields.body = body
-  }
+  //
+  // setBody(body: string) {
+  //   this.fields.body = body
+  // }
 }
