@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { bootstrap } from '~/core/model/bootstrap'
+import { RxDBLokiJSStore } from '~/core/plugins/rxdb/store'
 import { IndexedDBStore } from '~/core/stores/indexeddb'
 import { LokiJSStore } from '~/core/stores/lokijs'
 import { MemorySyncStore } from '~/core/stores/memory-sync'
@@ -28,8 +29,7 @@ export const DatabaseBootstrap = ({
 async function init() {
   await bootstrap({
     databaseName: 'pie.db',
-    createStore: async (options) =>
-      await LokiJSStore.create(options, new LokiIncrementalIndexedDBAdapter()),
+    createStore: async (options) => await RxDBLokiJSStore.create(options),
     // createStore: async (options) =>
     //   await MemorySyncStore.create(
     //     options,

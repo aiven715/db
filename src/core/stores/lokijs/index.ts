@@ -5,18 +5,14 @@ import { NotFoundError } from '~/core/errors'
 import { DatabaseOptions, Entry, Query, Store } from '~/core/types'
 import { mergeObjects } from '~/library/utils'
 
-import {
-  createLokiDatabase,
-  createLokiQuery,
-  getLokiCollectionName,
-} from './utils'
+import { createLokiDatabase, getLokiCollectionName } from './utils'
 
 export class LokiJSStore implements Store {
   protected constructor(private options: DatabaseOptions, private loki: Loki) {}
 
   list(collection: string, query?: Query): Box<Entry[]> {
     const lokiCollection = this.getLokiCollection(collection)
-    let results = lokiCollection.chain().find(createLokiQuery(query))
+    let results = lokiCollection.chain().find(query?.filter)
     if (query?.limit) {
       results = results.limit(query.limit)
     }

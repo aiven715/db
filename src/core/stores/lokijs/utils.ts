@@ -35,14 +35,3 @@ export const getLokiCollectionName = (
   const migrations = config.migrations || []
   return `${collection}-${migrations.length}`
 }
-
-export const createLokiQuery = (query?: Query) => {
-  return {
-    ...(query?.filter || {}),
-    // FIXME: specific to RxDB
-    // RxDB will have RxDBLokiJSStore which wraps LokiJSStore and adds
-    // a _deleted field to the query filter and to the document itself
-    // so that it can be used to soft-delete documents.
-    _deleted: false,
-  }
-}
