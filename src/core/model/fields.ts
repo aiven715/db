@@ -11,9 +11,14 @@ export const createFieldsProxy = <T extends Record<string, any>>(
     },
     get(target: T, p: string | symbol): unknown {
       const fieldValue = target[p as keyof T]
-      const patchValue = patch[p as keyof T]
+      let patchValue = patch[p as keyof T]
       if (typeof fieldValue !== 'object' || fieldValue === null) {
         return patchValue || fieldValue
+      }
+      // TODO: test
+      if (!patchValue) {
+        patch[p as keyof T] = {}
+        patchValue = patch[p as keyof T]
       }
       return createFieldsProxy(fieldValue, patchValue!)
     },

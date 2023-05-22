@@ -102,6 +102,11 @@ const RequestSpecList = ({ collectionId }: RequestSpecListProps) => {
               RequestSpec.create({
                 collectionId: collectionId || null,
                 name,
+                body: {
+                  text: {
+                    value: '',
+                  },
+                },
               })
             }
           }}

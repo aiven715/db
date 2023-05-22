@@ -2,11 +2,9 @@ import { useEffect, useState } from 'react'
 
 import { bootstrap } from '~/core/model/bootstrap'
 import { RxDBLokiJSStore } from '~/core/plugins/rxdb/store'
-import { IndexedDBStore } from '~/core/stores/indexeddb'
-import { LokiJSStore } from '~/core/stores/lokijs'
-import { MemorySyncStore } from '~/core/stores/memory-sync'
 
-const LokiIncrementalIndexedDBAdapter = require('lokijs/src/incremental-indexeddb-adapter')
+// import { IndexedDBStore } from '~/core/stores/indexeddb'
+// import { MemorySyncStore } from '~/core/stores/memory-sync'
 
 export const DatabaseBootstrap = ({
   children,
@@ -36,6 +34,4 @@ async function init() {
     //     await IndexedDBStore.create(options)
     //   ),
   })
-  // const [todo] = Todo.list().asValue();
-  // console.log(todo);
 }

@@ -1,6 +1,6 @@
 import Loki from 'lokijs'
 
-import { CollectionConfig, DatabaseOptions, Query } from '~/core/types'
+import { CollectionConfig, DatabaseOptions } from '~/core/types'
 
 export const createLokiDatabase = (
   options: DatabaseOptions,
