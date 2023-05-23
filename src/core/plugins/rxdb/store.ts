@@ -22,9 +22,9 @@ export class RxDBLokiJSStore extends LokiJSStore {
     })
   }
 
-  set(collection: string, identifier: string, slice: Partial<Entry>) {
+  update(collection: string, identifier: string, slice: Partial<Entry>) {
     return this.get(collection, identifier).then(() => {
-      return super.set(collection, identifier, slice)
+      return super.update(collection, identifier, slice)
     })
   }
 
@@ -33,7 +33,7 @@ export class RxDBLokiJSStore extends LokiJSStore {
   }
 
   remove(collection: string, identifier: string) {
-    return super.set(collection, identifier, { [DELETED_KEY]: true })
+    return super.update(collection, identifier, { [DELETED_KEY]: true })
   }
 
   static create(options: DatabaseOptions) {

@@ -45,7 +45,7 @@ export class LokiJSStore implements Store {
     return new Box()
   }
 
-  set(
+  update(
     collection: string,
     identifier: string,
     slice: Partial<Entry>

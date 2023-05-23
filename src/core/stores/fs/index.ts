@@ -29,7 +29,11 @@ export class FsStore implements Store {
     // TODO: report creation to sync
   }
 
-  async set(collection: string, identifier: string, document: Partial<Entry>) {
+  async update(
+    collection: string,
+    identifier: string,
+    document: Partial<Entry>
+  ) {
     const file = await this.backend.readFile(collection, identifier)
     const updated = update(file, document)
     await this.backend.writeFile(collection, identifier, updated)

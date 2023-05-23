@@ -59,5 +59,5 @@ export const getVersion = (store: Store) => {
 }
 
 export const setVersion = (store: Store, version: number) => {
-  return store.set(COLLECTION_NAME, VERSION_ID, { version })
+  return store.update(COLLECTION_NAME, VERSION_ID, { version })
 }

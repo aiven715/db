@@ -34,7 +34,7 @@ const runMigrations = async (
     entries.map((entry) => {
       const nextEntry = applyMigrationsToEntry(entry, migrations)
       const identifier = nextEntry[config.primaryKey] as string
-      return store.set(collection, identifier, nextEntry)
+      return store.update(collection, identifier, nextEntry)
     })
   )
 }

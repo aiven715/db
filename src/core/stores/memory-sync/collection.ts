@@ -30,10 +30,10 @@ export class MemorySyncStoreCollection<T extends Entry = Entry> {
 
   set(identifier: string, change: Partial<T>) {
     const scheduler = this.acquireScheduler(identifier)
-    this.memoryStore.set(this.name, identifier, change)
+    this.memoryStore.update(this.name, identifier, change)
     // TODO: probably clone
     scheduler.add(
-      (change) => this.persistentStore.set(this.name, identifier, change),
+      (change) => this.persistentStore.update(this.name, identifier, change),
       change
     )
     return new Box(void 0)

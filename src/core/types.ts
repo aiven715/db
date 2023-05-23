@@ -21,14 +21,15 @@ export interface Store {
   get(collection: string, identifier: string): Box<Entry>
   // TODO: store should return data on create and update? to avoid
   // extra get in async stores
-  set(
+  update(
     collection: string,
     identifier: string,
     document: Partial<Entry>
   ): Box<void>
-  // TODO: have only "set"? and "set" will create if not exists (what to do with validation?)
-  // TODO: rename to "insert"
   // TODO: should support an array of documents?
+  // TODO: have only "set"
+  // validation and "merge" set should
+  // be in Collection or ReactiveStore
   create(collection: string, document: Entry): Box<void>
   remove(collection: string, identifier: string): Box<void>
 }

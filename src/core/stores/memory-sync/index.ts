@@ -22,7 +22,7 @@ export class MemorySyncStore implements Store {
     return this.collection(collection).create(document)
   }
 
-  set(collection: string, identifier: string, change: Partial<Entry>) {
+  update(collection: string, identifier: string, change: Partial<Entry>) {
     return this.collection(collection).set(identifier, change)
   }
 

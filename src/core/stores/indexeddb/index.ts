@@ -25,7 +25,11 @@ export class IndexedDBStore implements Store {
     await this.idb.set(collection, identifier, binary)
   }
 
-  async set(collection: string, identifier: string, document: Partial<Entry>) {
+  async update(
+    collection: string,
+    identifier: string,
+    document: Partial<Entry>
+  ) {
     const binary = await this.idb.get(collection, identifier)
     const updated = update(binary, document)
     await this.idb.set(collection, identifier, updated)
