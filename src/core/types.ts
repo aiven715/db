@@ -27,6 +27,8 @@ export interface Store {
     document: Partial<Entry>
   ): Box<void>
   // TODO: have only "set"? and "set" will create if not exists (what to do with validation?)
+  // TODO: rename to "insert"
+  // TODO: should support an array of documents?
   create(collection: string, document: Entry): Box<void>
   remove(collection: string, identifier: string): Box<void>
 }

@@ -5,8 +5,8 @@ export interface Sync {
   // TODO: can be specific to HttpSync
   // pull(): Promise<void>
   // push(): Promise<void>
-  start(collection: string, store: Store, changeStream: ChangeStream): void
-  stop(collection: string): void
+  start(): void
+  stop(): void
 }
 
 export class HttpSync implements Sync {

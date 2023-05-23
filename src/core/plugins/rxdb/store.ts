@@ -1,8 +1,7 @@
 import { NotFoundError } from '~/core/errors'
 import { DELETED_KEY } from '~/core/plugins/rxdb/constants'
-
-import { LokiJSStore } from '../../stores/lokijs'
-import { DatabaseOptions, Entry, Query } from '../../types'
+import { LokiJSStore } from '~/core/stores/lokijs'
+import { DatabaseOptions, Entry, Query } from '~/core/types'
 
 const LokiIncrementalIndexedDBAdapter = require('lokijs/src/incremental-indexeddb-adapter')
 
