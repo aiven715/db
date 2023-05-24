@@ -3,10 +3,8 @@ import z from 'zod'
 import { ChangeStream } from '~/core/change-stream'
 
 import { Collection } from './collection'
-// import { extendWithMetaCollection } from './meta'
-// import { migrate } from './migrations'
 import { ReactiveStore } from './reactive-store'
-import { DatabaseOptions, Loader, Store, Sync } from './types'
+import { DatabaseOptions, Loader, Sync } from './types'
 
 type CollectionMap<O extends DatabaseOptions> = {
   [K in keyof O['collections']]: Collection<
@@ -30,12 +28,9 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
     const changeStream = new ChangeStream()
     const reactiveStore = new ReactiveStore(store, changeStream)
 
-    const migrations = [] as Promise<void>[]
     const collections = {} as CollectionMap<O>
     for (const [name, config] of Object.entries(options.collections)) {
       const sync = null! as Sync
-      // TODO: move migrations to Collection.create
-      // migrations.push(migrate(name, config, store))
       collections[name as keyof CollectionMap<O>] = new Collection(
         name,
         config,
@@ -43,7 +38,6 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
         sync
       )
     }
-    await Promise.all(migrations)
 
     return new Database(collections)
   }
