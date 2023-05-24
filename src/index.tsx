@@ -12,3 +12,4 @@ root.render(
     </StateProvider>
   </DatabaseBootstrap>
 )
+export { Sync } from '~/core/types'

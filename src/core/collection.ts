@@ -1,14 +1,13 @@
 import { ReactiveStore } from './reactive-store'
 import { Result } from './result'
-import { Sync } from './syncs'
-import { CollectionConfig, Entry, Query } from './types'
+import { CollectionConfig, Entry, Query, Sync } from './types'
 
 export class Collection<T extends Entry = Entry> {
   constructor(
     private name: string,
     private config: CollectionConfig<T>,
     private reactiveStore: ReactiveStore,
-    private sync?: Sync
+    public sync?: Sync
   ) {}
 
   list(query?: Query) {
@@ -32,8 +31,4 @@ export class Collection<T extends Entry = Entry> {
   remove(id: string) {
     return this.reactiveStore.remove(this.name, id)
   }
-
-  startSync() {}
-
-  stopSync() {}
 }

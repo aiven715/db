@@ -13,7 +13,9 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rxjs": "^7.8.0",
-    "zod": "^3.21.4"
+    "rxdb": "^12.4.3",
+    "zod": "^3.21.4",
+    "zod-to-json-schema": "^3.20.4"
   },
   "scripts": {
     "start": "craco start",

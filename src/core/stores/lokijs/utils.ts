@@ -2,9 +2,11 @@ import Loki from 'lokijs'
 
 import { CollectionConfig, DatabaseOptions } from '~/core/types'
 
-export const createLokiDatabase = (
+import { LokiJSStoreOptions } from './index'
+
+export const createLokiDb = (
   options: DatabaseOptions,
-  adapter?: LokiPersistenceAdapter
+  storeOptions?: LokiJSStoreOptions
 ): Promise<Loki> =>
   new Promise((resolve) => {
     const loki = new Loki(options.name, {
@@ -24,7 +26,7 @@ export const createLokiDatabase = (
         }
         resolve(loki)
       },
-      ...(adapter && { adapter }),
+      ...storeOptions?.lokiOptions,
     })
   })
 

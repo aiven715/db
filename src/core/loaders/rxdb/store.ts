@@ -1,9 +1,8 @@
 import { NotFoundError } from '~/core/errors'
-import { DELETED_KEY } from '~/core/plugins/rxdb/constants'
 import { LokiJSStore } from '~/core/stores/lokijs'
-import { DatabaseOptions, Entry, Query } from '~/core/types'
+import { Entry, Query } from '~/core/types'
 
-const LokiIncrementalIndexedDBAdapter = require('lokijs/src/incremental-indexeddb-adapter')
+import { DELETED_KEY } from '../rxdb/constants'
 
 export class RxDBLokiJSStore extends LokiJSStore {
   list(collection: string, query?: Query) {
@@ -34,10 +33,5 @@ export class RxDBLokiJSStore extends LokiJSStore {
 
   remove(collection: string, identifier: string) {
     return super.update(collection, identifier, { [DELETED_KEY]: true })
-  }
-
-  static create(options: DatabaseOptions) {
-    const adapter = new LokiIncrementalIndexedDBAdapter()
-    return super.create(options, adapter)
   }
 }

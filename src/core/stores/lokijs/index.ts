@@ -5,7 +5,12 @@ import { NotFoundError } from '~/core/errors'
 import { DatabaseOptions, Entry, Query, Store } from '~/core/types'
 import { mergeObjects } from '~/library/utils'
 
-import { createLokiDatabase, getLokiCollectionName } from './utils'
+import { createLokiDb, getLokiCollectionName } from './utils'
+
+export type LokiJSStoreOptions = {
+  lokiOptions?: LokiConfigOptions
+  loki?: Loki
+}
 
 export class LokiJSStore implements Store {
   protected constructor(private options: DatabaseOptions, private loki: Loki) {}
@@ -81,10 +86,11 @@ export class LokiJSStore implements Store {
   }
 
   static async create(
-    options: DatabaseOptions,
-    adapter?: LokiPersistenceAdapter
+    databaseOptions: DatabaseOptions,
+    storeOptions?: LokiJSStoreOptions
   ) {
-    const loki = await createLokiDatabase(options, adapter)
-    return new this(options, loki)
+    const loki =
+      storeOptions?.loki || (await createLokiDb(databaseOptions, storeOptions))
+    return new this(databaseOptions, loki)
   }
 }

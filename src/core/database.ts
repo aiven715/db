@@ -3,11 +3,10 @@ import z from 'zod'
 import { ChangeStream } from '~/core/change-stream'
 
 import { Collection } from './collection'
-import { extendWithMetaCollection } from './meta'
-import { migrate } from './migrations'
+// import { extendWithMetaCollection } from './meta'
+// import { migrate } from './migrations'
 import { ReactiveStore } from './reactive-store'
-import { Sync } from './syncs'
-import { DatabaseOptions, Store } from './types'
+import { DatabaseOptions, Store, Sync } from './types'
 
 type CollectionMap<O extends DatabaseOptions> = {
   [K in keyof O['collections']]: Collection<
@@ -22,28 +21,27 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
 
   static async create<O extends DatabaseOptions>(
     options: O,
-    createStore: (options: O) => Promise<Store>
+    createStore: (options: O) => Promise<Store>,
+    createLoader?: CreateLoader
   ) {
-    const store = await createStore(extendWithMetaCollection(options))
-    // TODO: Option 1. use another store in a non-leader tab (for instance MemorySync + BroadcastChannelStore)
-    // TODO: Option 2. use another reactive store (which decorates original reactive store) in a non-leader tab (with MemorySync + BroadcastChannelStore)
-    // TODO: Option 3. use another store and sync in a non-leader tab
-    // TODO: Option 4. use another store and real-time sync in a non-leader tab
+    const loader = await createLoader?.(options)
+    const store = await createStore(options)
 
     // Can it be a part of a public API?
     const changeStream = new ChangeStream()
-    const sync = null! as Sync
     const reactiveStore = new ReactiveStore(store, changeStream)
 
     const migrations = [] as Promise<void>[]
     const collections = {} as CollectionMap<O>
     for (const [name, config] of Object.entries(options.collections)) {
+      const sync = null! as Sync
       // TODO: move migrations to Collection.create
       // migrations.push(migrate(name, config, store))
       collections[name as keyof CollectionMap<O>] = new Collection(
         name,
         config,
-        reactiveStore
+        reactiveStore,
+        sync
       )
     }
     await Promise.all(migrations)
@@ -51,3 +49,8 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
     return new Database(collections)
   }
 }
+
+type CreateLoader = (options: DatabaseOptions) => Promise<{
+  createStore: () => Promise<Store>
+  createSync: () => Promise<Sync>
+}>

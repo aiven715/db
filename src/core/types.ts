@@ -32,6 +32,16 @@ export interface Store {
   remove(collection: string, identifier: string): Box<void>
 }
 
+export interface Sync {
+  start(): void
+  stop(): void
+}
+
+export interface Loader {
+  createStore(options: DatabaseOptions): Promise<Store>
+  createSync(collectionName: string): Promise<Sync>
+}
+
 export type DatabaseOptions = {
   name: string
   collections: Record<string, CollectionConfig>
