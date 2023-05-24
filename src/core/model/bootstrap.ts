@@ -1,5 +1,5 @@
 import { Database } from '../database'
-import { DatabaseOptions, Store } from '../types'
+import { DatabaseOptions, Loader } from '../types'
 
 import { registry } from './registry'
 
@@ -13,7 +13,7 @@ export const DATABASE_GLOBAL_KEY = Symbol('DATABASE_GLOBAL_KEY')
 
 export type BootstrapOptions = {
   databaseName: string
-  createStore: (options: DatabaseOptions) => Promise<Store>
+  createLoader: (options: DatabaseOptions) => Promise<Loader>
 }
 
 export const bootstrap = async (options: BootstrapOptions) => {
@@ -32,6 +32,6 @@ export const bootstrap = async (options: BootstrapOptions) => {
       name: options.databaseName,
       collections,
     },
-    options.createStore
+    options.createLoader
   )
 }

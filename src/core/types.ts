@@ -1,5 +1,7 @@
 import z from 'zod'
 
+import { ChangeStream } from '~/core/change-stream'
+
 import { Box } from './box'
 import { Migration } from './migrations'
 
@@ -37,9 +39,10 @@ export interface Sync {
   stop(): void
 }
 
+// TODO: should migration/validation also be a loader?
 export interface Loader {
   createStore(options: DatabaseOptions): Promise<Store>
-  createSync(collectionName: string): Promise<Sync>
+  createSync(collectionName: string, changeStream: ChangeStream): Sync
 }
 
 export type DatabaseOptions = {

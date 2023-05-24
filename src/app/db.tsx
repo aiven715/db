@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 
+import { RxDBLoader } from '~/core/loaders/rxdb'
 import { bootstrap } from '~/core/model/bootstrap'
-
-import { RxDBLokiJSStore } from '../core/loaders/rxdb/store'
 
 export const DatabaseBootstrap = ({
   children,
@@ -25,6 +24,6 @@ export const DatabaseBootstrap = ({
 async function init() {
   await bootstrap({
     databaseName: 'pie.db',
-    createStore: async (options) => await RxDBLokiJSStore.create(options),
+    createLoader: (options) => RxDBLoader.create(options),
   })
 }

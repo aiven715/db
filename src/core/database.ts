@@ -6,7 +6,7 @@ import { Collection } from './collection'
 // import { extendWithMetaCollection } from './meta'
 // import { migrate } from './migrations'
 import { ReactiveStore } from './reactive-store'
-import { DatabaseOptions, Store, Sync } from './types'
+import { DatabaseOptions, Loader, Store, Sync } from './types'
 
 type CollectionMap<O extends DatabaseOptions> = {
   [K in keyof O['collections']]: Collection<
@@ -21,11 +21,10 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
 
   static async create<O extends DatabaseOptions>(
     options: O,
-    createStore: (options: O) => Promise<Store>,
-    createLoader?: CreateLoader
+    createLoader: (options: O) => Promise<Loader>
   ) {
     const loader = await createLoader?.(options)
-    const store = await createStore(options)
+    const store = await loader.createStore(options)
 
     // Can it be a part of a public API?
     const changeStream = new ChangeStream()
@@ -49,8 +48,3 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
     return new Database(collections)
   }
 }
-
-type CreateLoader = (options: DatabaseOptions) => Promise<{
-  createStore: () => Promise<Store>
-  createSync: () => Promise<Sync>
-}>
