@@ -1,4 +1,6 @@
-import { ChangeStream } from '~/core/change-stream'
+import { Subscription } from 'rxjs'
+
+import { ChangeEventType, ChangeStream } from '~/core/change-stream'
 import { Sync } from '~/core/syncs'
 import { Store } from '~/core/types'
 
@@ -16,7 +18,8 @@ const DEFAULT_OPTIONS: Partial<RxDBHttpSyncOptions> = {
 
 export class RxDBHttpSync implements Sync {
   private options: RxDBHttpSyncOptions
-  private timer?: number
+  private timer?: NodeJS.Timer
+  private subscription?: Subscription
 
   constructor(
     private collection: string,
@@ -27,22 +30,63 @@ export class RxDBHttpSync implements Sync {
     this.options = { ...DEFAULT_OPTIONS, ...options }
   }
 
-  start() {}
+  async start() {
+    await this.push()
+    await this.pull()
+    this.subscription = this.changeStream
+      .observable(this.collection)
+      .subscribe(async (change) => {
+        if (change.source !== CHANGE_SOURCE) {
+          await this.push()
+        }
+      })
+    this.timer = setInterval(() => this.pull(), this.options.pullInterval)
+  }
 
   stop() {
     if (this.timer) {
       clearInterval(this.timer)
+      delete this.timer
+    }
+    if (this.subscription) {
+      this.subscription.unsubscribe()
+      delete this.subscription
     }
   }
 
   private async pull() {
     const last = await this.lastSyncedEntry()
     const { hasMore, entries } = await this.options.pull(last)
+    for (const entry of entries) {
+      try {
+        // TODO: handle deletion
+        await this.store.get(this.collection, entry.id)
+        await this.store.update(this.collection, entry.id, entry)
+        await this.changeStream.change(this.collection, {
+          type: ChangeEventType.Update,
+          entry,
+          source: CHANGE_SOURCE,
+          // TODO: do object diff
+          slice: entry,
+        })
+      } catch {
+        await this.store.create(this.collection, entry)
+        await this.changeStream.change(this.collection, {
+          type: ChangeEventType.Create,
+          entry,
+          source: CHANGE_SOURCE,
+        })
+      }
+    }
+    if (hasMore) {
+      await this.pull()
+    }
   }
 
   private async push() {
     const entries = await this.notSyncedEntries()
     await this.options.push(entries)
+    await this.pull()
   }
 
   private async lastSyncedEntry() {
@@ -53,6 +97,8 @@ export class RxDBHttpSync implements Sync {
     return [] as RxDBEntry[]
   }
 }
+
+const CHANGE_SOURCE = 'http-sync'
 
 // private async request(method: string, body?: unknown) {
 //   const response = await fetch(this.options.url, {

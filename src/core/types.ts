@@ -27,9 +27,7 @@ export interface Store {
     document: Partial<Entry>
   ): Box<void>
   // TODO: should support an array of documents?
-  // TODO: have only "set"
-  // validation and "merge" set should
-  // be in Collection or ReactiveStore
+  // TODO: validation and "merge" set should be in Collection or ReactiveStore?
   create(collection: string, document: Entry): Box<void>
   remove(collection: string, identifier: string): Box<void>
 }
