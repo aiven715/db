@@ -1,7 +1,5 @@
 import z from 'zod'
 
-import { ChangeStream } from '~/core/change-stream'
-
 import { Box } from './box'
 
 export type Identifier = string
@@ -26,10 +24,10 @@ export interface Store {
     collection: string,
     identifier: string,
     document: Partial<Entry>
-  ): Box<void>
+  ): Box<Entry>
   // TODO: should support an array of documents?
   // TODO: validation and "merge" set should be in Collection or ReactiveStore?
-  create(collection: string, document: Entry): Box<void>
+  create(collection: string, document: Entry): Box<Entry>
   remove(collection: string, identifier: string): Box<void>
 }
 

@@ -7,3 +7,7 @@ export const schema = z.object({
   // createdAt: z.number().default(() => Date.now()),
   name: z.string(),
 })
+
+export const defaults: Partial<CollectionEntry> = {
+  name: '',
+}

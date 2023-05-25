@@ -23,9 +23,9 @@ export class Collection<T extends Entry = Entry> {
     return this.reactiveStore.create(this.name, parsed)
   }
 
-  set(id: string, slice: Partial<T>) {
+  update(id: string, slice: Partial<T>) {
     const parsed = this.config.schema.partial().parse(slice) as Partial<T>
-    return this.reactiveStore.set(this.name, id, parsed)
+    return this.reactiveStore.update(this.name, id, parsed)
   }
 
   remove(id: string) {

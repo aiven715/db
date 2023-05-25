@@ -43,27 +43,27 @@ export class LokiJSStore implements Store {
     return new Box(entry)
   }
 
-  create(collection: string, document: Entry): Box<void> {
+  create(collection: string, entry: Entry): Box<Entry> {
     const lokiCollection = this.getLokiCollection(collection)
-    lokiCollection.insert(document)
+    const createdEntry = lokiCollection.insert(entry)
     this.loki.save()
-    return new Box()
+    return new Box(createdEntry)
   }
 
   update(
     collection: string,
     identifier: string,
     slice: Partial<Entry>
-  ): Box<void> {
+  ): Box<Entry> {
     const lokiCollection = this.getLokiCollection(collection)
     const primaryKey = this.getPrimaryKey(collection)
     const entry = lokiCollection.findOne({ [primaryKey]: identifier })
     if (!entry) {
       throw new NotFoundError(identifier)
     }
-    lokiCollection.update(mergeObjects(entry, slice))
+    const updatedEntry = lokiCollection.update(mergeObjects(entry, slice))
     this.loki.save()
-    return new Box()
+    return new Box(updatedEntry)
   }
 
   remove(collection: string, identifier: string): Box<void> {

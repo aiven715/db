@@ -36,6 +36,7 @@ export class RxDBLoader implements Loader {
 
     const localState = await rxdb.internalStore.internals.localState!
     const loki = localState.databaseState.database
+    // window.loki = loki
     const store = await RxDBLokiJSStore.create(options, { loki })
 
     return new this(store, rxdb, changeStream)

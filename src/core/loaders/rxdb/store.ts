@@ -1,3 +1,4 @@
+import { Box } from '~/core/box'
 import { NotFoundError } from '~/core/errors'
 import { LokiJSStore, LokiJSStoreOptions } from '~/core/stores/lokijs'
 import { DatabaseOptions, Entry, Query } from '~/core/types'
@@ -36,7 +37,8 @@ export class RxDBLokiJSStore extends LokiJSStore {
   }
 
   remove(collection: string, identifier: string) {
-    return super.update(collection, identifier, { [DELETED_KEY]: true })
+    super.update(collection, identifier, { [DELETED_KEY]: true })
+    return new Box()
   }
 
   static create(

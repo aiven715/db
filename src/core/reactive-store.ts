@@ -35,7 +35,7 @@ export class ReactiveStore {
     )
   }
 
-  set(collection: string, id: string, slice: Partial<Entry>): Box<void> {
+  update(collection: string, id: string, slice: Partial<Entry>): Box<void> {
     return this.store.update(collection, id, slice).then(() =>
       this.changeStream.change(collection, {
         type: ChangeEventType.Update,

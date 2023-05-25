@@ -1,3 +1,4 @@
+import { uuid } from '@automerge/automerge'
 import { clone } from 'lodash'
 
 import { Include, Relation, getRelations } from '~/core/model/relations'
@@ -10,8 +11,9 @@ import { createFieldsProxy } from './fields'
 
 export class Model<T extends Entry> {
   static readonly collectionName: string
-  static readonly schema: Schema
   static readonly primaryKey = 'id'
+  static readonly schema: Schema
+  static readonly defaults: Partial<Entry> = {}
   static readonly migrations: Migration[] = []
   static readonly relations: Record<string, Relation> = {}
 
@@ -19,6 +21,11 @@ export class Model<T extends Entry> {
   // #fields: T
   #patch: DeepPartial<T> = {}
 
+  // TODO: should be Partial<T>, since user can do the following:
+  // const model = new Model({ id: '1', name: 'test' })
+  // model.fields.body = { text: { value: 'test' } }
+  // model.save()
+  // TODO: merge with defaults (id + defaults)
   constructor(fields: T) {
     // this.#fields = clone(fields)
     this.fields = createFieldsProxy(fields, this.#patch)
@@ -29,14 +36,17 @@ export class Model<T extends Entry> {
   }
 
   save() {
-    return this.class.collection.set(this.id, clone(this.#patch)).then(() => {
-      // FIXME: won't work with async store
-      // once we'll implement returning data in update:
-      // this.#fields = clone(updated)
-      for (const key in this.#patch) {
-        delete this.#patch[key]
-      }
-    })
+    // TODO: use upsert
+    return this.class.collection
+      .update(this.id, clone(this.#patch))
+      .then(() => {
+        // FIXME: won't work with async store
+        // once we'll implement returning data in update:
+        // this.#fields = clone(updated)
+        for (const key in this.#patch) {
+          delete this.#patch[key]
+        }
+      })
   }
 
   remove() {
@@ -88,10 +98,15 @@ export class Model<T extends Entry> {
     this: M,
     fields: T
   ) {
+    // TODO: return instance and also create a new instance and .save()
     return this.collection.create(fields)
   }
 
   static remove(id: string) {
     return this.collection.remove(id)
+  }
+
+  private static base<T extends Entry>(props: Partial<T>) {
+    return { [this.primaryKey]: uuid(), ...this.defaults, ...props }
   }
 }

@@ -14,3 +14,15 @@ export const schema = z.object({
     }),
   }),
 })
+
+export const defaults: Partial<RequestSpecEntry> = {
+  collectionId: null,
+  name: '',
+  method: 'GET',
+  url: '',
+  body: {
+    text: {
+      value: '',
+    },
+  },
+}
