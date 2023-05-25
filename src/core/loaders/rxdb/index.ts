@@ -26,6 +26,7 @@ export class RxDBLoader implements Loader {
   }
 
   static async create(options: DatabaseOptions, changeStream: ChangeStream) {
+    // TODO: use adapter only in a leader tab
     const adapter = new LokiIncrementalIndexedDBAdapter()
     const rxdb = await createRxDatabase({
       name: options.name,
