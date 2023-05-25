@@ -11,32 +11,32 @@ import { RxDBHttpSync } from './sync'
 const LokiIncrementalIndexedDBAdapter = require('lokijs/src/incremental-indexeddb-adapter')
 
 export class RxDBLoader implements Loader {
-  private constructor(private rxdb: RxDatabase) {}
+  private constructor(
+    public store: RxDBLokiJSStore,
+    private rxdb: RxDatabase,
+    private changeStream: ChangeStream
+  ) {}
 
-  async createStore(options: DatabaseOptions) {
-    const localState = await this.rxdb.internalStore.internals.localState!
-    const loki = localState.databaseState.database
-    return RxDBLokiJSStore.create(options, { loki })
+  createSync(collectionName: string) {
+    return new RxDBHttpSync({
+      collectionName,
+      changeStream: this.changeStream,
+      rxdb: this.rxdb,
+    })
   }
 
-  createSync(collectionName: string, changeStream: ChangeStream) {
-    return new RxDBHttpSync({ collectionName, changeStream, rxdb: this.rxdb })
-  }
-
-  static async create(options: DatabaseOptions) {
+  static async create(options: DatabaseOptions, changeStream: ChangeStream) {
     const adapter = new LokiIncrementalIndexedDBAdapter()
     const rxdb = await createRxDatabase({
       name: options.name,
       storage: getRxStorageLoki({ adapter }),
     })
     await createCollections(rxdb, options)
-    return new this(rxdb)
+
+    const localState = await rxdb.internalStore.internals.localState!
+    const loki = localState.databaseState.database
+    const store = await RxDBLokiJSStore.create(options, { loki })
+
+    return new this(store, rxdb, changeStream)
   }
 }
-
-// interface Loader2 {
-//   store: any
-//   createSync: (collectionName: string) => void
-// }
-//
-// class RxDBLoader2 implements Loader2 {}

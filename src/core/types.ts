@@ -40,8 +40,8 @@ export interface Sync {
 
 // TODO: should migration/validation also be a loader?
 export interface Loader {
-  createStore(options: DatabaseOptions): Promise<Store>
-  createSync(collectionName: string, changeStream: ChangeStream): Sync
+  store: Store
+  createSync(collectionName: string): Sync
 }
 
 export type DatabaseOptions = {

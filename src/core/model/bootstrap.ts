@@ -1,3 +1,5 @@
+import { ChangeStream } from '~/core/change-stream'
+
 import { Database } from '../database'
 import { DatabaseOptions, Loader } from '../types'
 
@@ -13,7 +15,10 @@ export const DATABASE_GLOBAL_KEY = Symbol('DATABASE_GLOBAL_KEY')
 
 export type BootstrapOptions = {
   databaseName: string
-  createLoader: (options: DatabaseOptions) => Promise<Loader>
+  createLoader: (
+    options: DatabaseOptions,
+    changeStream: ChangeStream
+  ) => Promise<Loader>
 }
 
 export const bootstrap = async (options: BootstrapOptions) => {

@@ -1,15 +1,10 @@
-import { ChangeStream } from '../../change-stream'
-import { DatabaseOptions, Loader } from '../../types'
+import { DatabaseOptions, Loader, Store } from '../../types'
 
 export class CrossTabLoader implements Loader {
-  private constructor(private baseLoader: Loader) {}
+  private constructor(public store: Store, private baseLoader: Loader) {}
 
-  async createStore(options: DatabaseOptions) {
-    return this.baseLoader.createStore(options)
-  }
-
-  createSync(collectionName: string, changeStream: ChangeStream) {
-    return this.baseLoader.createSync(collectionName, changeStream)
+  createSync(collectionName: string) {
+    return this.baseLoader.createSync(collectionName)
   }
 
   static async create(
