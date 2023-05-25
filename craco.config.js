@@ -6,5 +6,10 @@ module.exports = {
   plugins: [cracoWasm()],
   webpack: {
     alias: { '~': path.resolve(__dirname, './src') },
+    resolve: {
+      fallback: {
+        fs: false,
+      },
+    },
   },
 }

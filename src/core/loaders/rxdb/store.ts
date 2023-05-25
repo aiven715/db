@@ -1,8 +1,12 @@
 import { NotFoundError } from '~/core/errors'
-import { LokiJSStore } from '~/core/stores/lokijs'
-import { Entry, Query } from '~/core/types'
+import { LokiJSStore, LokiJSStoreOptions } from '~/core/stores/lokijs'
+import { DatabaseOptions, Entry, Query } from '~/core/types'
 
 import { DELETED_KEY } from '../rxdb/constants'
+
+export type RxDBLokiJSStoreOptions = LokiJSStoreOptions & {
+  loki: Loki
+}
 
 export class RxDBLokiJSStore extends LokiJSStore {
   list(collection: string, query?: Query) {
@@ -33,5 +37,13 @@ export class RxDBLokiJSStore extends LokiJSStore {
 
   remove(collection: string, identifier: string) {
     return super.update(collection, identifier, { [DELETED_KEY]: true })
+  }
+
+  static create(
+    options: DatabaseOptions,
+    storeOptions: RxDBLokiJSStoreOptions
+  ) {
+    storeOptions.loki.throttledSaves = true
+    return super.create(options, storeOptions)
   }
 }

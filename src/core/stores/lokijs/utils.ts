@@ -9,7 +9,7 @@ export const createLokiDb = (
   storeOptions?: LokiJSStoreOptions
 ): Promise<Loki> =>
   new Promise((resolve) => {
-    const loki = new Loki(options.name, {
+    const loki = new Loki(`${options.name}.db`, {
       autoload: true,
       throttledSaves: true,
       autoloadCallback: () => {

@@ -23,7 +23,7 @@ export const DatabaseBootstrap = ({
 
 async function init() {
   await bootstrap({
-    databaseName: 'pie.db',
+    databaseName: 'pie',
     createLoader: (options) => RxDBLoader.create(options),
   })
 }

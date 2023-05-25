@@ -1,10 +1,9 @@
 import { clone } from 'lodash'
 
-import { Migration } from '~/core/migrations'
 import { Include, Relation, getRelations } from '~/core/model/relations'
 import { DeepPartial } from '~/library/types'
 
-import { Entry, Query, Schema } from '../types'
+import { Entry, Migration, Query, Schema } from '../types'
 
 import { DATABASE_GLOBAL_KEY } from './bootstrap'
 import { createFieldsProxy } from './fields'
