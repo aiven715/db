@@ -1,12 +1,13 @@
 import { uuid } from '@automerge/automerge'
 import { clone } from 'lodash'
 
+import { Database } from '~/core/database'
+import { DatabaseNotFoundError } from '~/core/model/errors'
 import { Include, Relation, getRelations } from '~/core/model/relations'
 import { DeepPartial } from '~/library/types'
 
 import { Entry, Migration, Query, Schema } from '../types'
 
-import { DATABASE_GLOBAL_KEY } from './bootstrap'
 import { createFieldsProxy } from './fields'
 
 export class Model<T extends Entry> {
@@ -16,6 +17,8 @@ export class Model<T extends Entry> {
   static readonly defaults: Partial<Entry> = {}
   static readonly migrations: Migration[] = []
   static readonly relations: Record<string, Relation> = {}
+
+  static database?: Database
 
   fields: T
   // #fields: T
@@ -58,15 +61,10 @@ export class Model<T extends Entry> {
   }
 
   protected static get collection() {
-    return this.database.collections[this.collectionName]
-  }
-
-  private static get database() {
-    const database = window[DATABASE_GLOBAL_KEY]
-    if (!database) {
-      throw new Error('Database not found')
+    if (!this.database) {
+      throw new DatabaseNotFoundError()
     }
-    return database
+    return this.database.collections[this.collectionName]
   }
 
   static get<T extends Entry, M extends typeof Model<T>, I extends Include<M>>(

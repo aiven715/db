@@ -5,14 +5,6 @@ import { DatabaseOptions, Loader } from '../types'
 
 import { registry } from './registry'
 
-declare global {
-  interface Window {
-    [DATABASE_GLOBAL_KEY]: Database | undefined
-  }
-}
-
-export const DATABASE_GLOBAL_KEY = Symbol('DATABASE_GLOBAL_KEY')
-
 export type BootstrapOptions = {
   databaseName: string
   createLoader: (
@@ -32,11 +24,15 @@ export const bootstrap = async (options: BootstrapOptions) => {
     }
   }
 
-  window[DATABASE_GLOBAL_KEY] = await Database.create(
+  const database = await Database.create(
     {
       name: options.databaseName,
       collections,
     },
     options.createLoader
   )
+
+  for (const Model of registry) {
+    Model.database = database
+  }
 }
