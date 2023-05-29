@@ -53,5 +53,7 @@ export type CollectionConfig<T extends Entry = Entry> = {
   primaryKey: keyof T
   schema: Schema
   indexes?: (keyof T)[]
+  // TODO: introduce "version" since schema can be changed
+  // without the need of adding migrations (e.g adding an index)
   migrations?: Migration[]
 }

@@ -1,5 +1,9 @@
-import { RxDatabase, createRxDatabase } from 'rxdb'
+import { RxDatabase, addRxPlugin, createRxDatabase } from 'rxdb'
+import { RxDBLeaderElectionPlugin } from 'rxdb/plugins/leader-election'
 import { getRxStorageLoki } from 'rxdb/plugins/lokijs'
+import { RxDBMigrationPlugin } from 'rxdb/plugins/migration'
+
+import { migrate } from '~/core/loaders/rxdb/migrations'
 
 import { ChangeStream } from '../../change-stream'
 import { DatabaseOptions, Loader } from '../../types'
@@ -7,8 +11,10 @@ import { DatabaseOptions, Loader } from '../../types'
 import { createCollections } from './collections'
 import { RxDBLokiJSStore } from './store'
 import { RxDBHttpSync } from './sync'
+import { createMemoryLokiInstance } from './utils'
 
 const LokiIncrementalIndexedDBAdapter = require('lokijs/src/incremental-indexeddb-adapter')
+const PLUGINS = [RxDBMigrationPlugin, RxDBLeaderElectionPlugin]
 
 export class RxDBLoader implements Loader {
   private constructor(
@@ -26,17 +32,19 @@ export class RxDBLoader implements Loader {
   }
 
   static async create(options: DatabaseOptions, changeStream: ChangeStream) {
-    // TODO: use adapter only in a leader tab
+    PLUGINS.forEach(addRxPlugin)
     const adapter = new LokiIncrementalIndexedDBAdapter()
     const rxdb = await createRxDatabase({
       name: options.name,
       storage: getRxStorageLoki({ adapter }),
     })
     await createCollections(rxdb, options)
+    await migrate(rxdb)
 
-    const localState = await rxdb.internalStore.internals.localState!
-    const loki = localState.databaseState.database
-    // window.loki = loki
+    const localState = await rxdb.internalStore.internals.localState
+    const loki =
+      localState?.databaseState.database ||
+      (await createMemoryLokiInstance(options))
     const store = await RxDBLokiJSStore.create(options, { loki })
 
     return new this(store, rxdb, changeStream)

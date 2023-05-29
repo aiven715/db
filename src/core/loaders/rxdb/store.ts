@@ -1,5 +1,6 @@
 import { Box } from '~/core/box'
 import { NotFoundError } from '~/core/errors'
+import { getLokiCollectionName } from '~/core/loaders/rxdb/utils'
 import { LokiJSStore, LokiJSStoreOptions } from '~/core/stores/lokijs'
 import { DatabaseOptions, Entry, Query } from '~/core/types'
 
@@ -41,11 +42,17 @@ export class RxDBLokiJSStore extends LokiJSStore {
     return new Box()
   }
 
+  protected getLokiCollection(collection: string) {
+    const config = this.options.collections[collection]
+    const name = getLokiCollectionName(collection, config)
+    return this.loki.getCollection(name)
+  }
+
   static create(
     options: DatabaseOptions,
     storeOptions: RxDBLokiJSStoreOptions
   ) {
     storeOptions.loki.throttledSaves = true
-    return super.create(options, storeOptions)
+    return super.create(options, storeOptions) as Promise<RxDBLokiJSStore>
   }
 }

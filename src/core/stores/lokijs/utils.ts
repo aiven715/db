@@ -1,12 +1,10 @@
 import Loki from 'lokijs'
 
-import { CollectionConfig, DatabaseOptions } from '~/core/types'
+import { DatabaseOptions } from '~/core/types'
 
-import { LokiJSStoreOptions } from './index'
-
-export const createLokiDb = (
+export const createLokiInstance = (
   options: DatabaseOptions,
-  storeOptions?: LokiJSStoreOptions
+  lokiOptions?: Partial<LokiConfigOptions>
 ): Promise<Loki> =>
   new Promise((resolve) => {
     const loki = new Loki(`${options.name}.db`, {
@@ -15,10 +13,9 @@ export const createLokiDb = (
       autoloadCallback: () => {
         for (const collection in options.collections) {
           const config = options.collections[collection]
-          const name = getLokiCollectionName(collection, config)
-          const exists = loki.getCollection(name)
+          const exists = loki.getCollection(collection)
           if (!exists) {
-            loki.addCollection(name, {
+            loki.addCollection(collection, {
               unique: [config.primaryKey],
               indices: config.indexes,
             })
@@ -26,14 +23,6 @@ export const createLokiDb = (
         }
         resolve(loki)
       },
-      ...storeOptions?.lokiOptions,
+      ...lokiOptions,
     })
   })
-
-export const getLokiCollectionName = (
-  collection: string,
-  config: CollectionConfig
-) => {
-  const migrations = config.migrations || []
-  return `${collection}-${migrations.length}`
-}
