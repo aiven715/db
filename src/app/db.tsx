@@ -22,6 +22,7 @@ export const DatabaseBootstrap = ({
   return <>{children}</>
 }
 
+// TODO: copy services and use sync service for pull/push
 async function init() {
   const { database } = await bootstrap({
     databaseName: 'pie',
@@ -73,11 +74,13 @@ async function init() {
               'Httpie-Client-Version': '2023.3.0',
             },
             method: 'POST',
-            body: JSON.stringify(documents),
+            body: JSON.stringify(
+              documents.map(({ _meta, __instanceId, ...doc }: any) => doc)
+            ),
           })
         },
       }),
   })
 
-  database.collections.requestspecs.sync?.start()
+  // database.collections.requestspecs.sync?.start()
 }
