@@ -14,12 +14,15 @@ export class Model<T extends Entry> {
   static readonly collectionName: string
   static readonly primaryKey = 'id'
   static readonly schema: Schema
+  // TODO: model should not deal with defaults it should be defined in the schema instead
+  // so database itself will only deal with validation and defaults
   static readonly defaults: Partial<Entry> = {}
   static readonly migrations: Migration[] = []
   static readonly relations: Record<string, Relation> = {}
 
   static database?: Database
 
+  // TODO: abstract to a separate class
   fields: T
   // #fields: T
   #patch: DeepPartial<T> = {}

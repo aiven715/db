@@ -1,6 +1,7 @@
 import { Observable, combineLatest, firstValueFrom, of } from 'rxjs'
 import { catchError, switchMap } from 'rxjs/operators'
 
+// TODO: move to model
 export class Result<T> {
   constructor(private observable: Observable<T>) {}
 
