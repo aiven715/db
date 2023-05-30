@@ -1,5 +1,5 @@
 import { uuid } from '@automerge/automerge'
-import { RxChangeEvent, RxDatabase } from 'rxdb'
+import { RxChangeEvent, RxCollection, RxDatabase } from 'rxdb'
 
 import { ChangeEvent, ChangeEventType, ChangeStream } from '../../change-stream'
 import { DatabaseOptions } from '../../types'
@@ -7,6 +7,8 @@ import { DatabaseOptions } from '../../types'
 import { CHANGE_SOURCE } from './constants'
 import { RxDBLokiJSStore } from './store'
 import { RxDBEntry } from './types'
+
+const INSTANCE_ID_KEY = '__instanceId'
 
 export const syncChanges = (
   options: DatabaseOptions,
@@ -21,13 +23,10 @@ export const syncChanges = (
       if (change.source === CHANGE_SOURCE) {
         return
       }
-      rxdb.collections[collection].upsert({
-        ...change.entry,
-        __instanceId: instanceId,
-      })
+      changeRxDB(rxdb.collections[collection], change, instanceId)
     })
     rxdb.collections[collection].$.subscribe((change) => {
-      if (change.documentData.__instanceId === instanceId) {
+      if (change.documentData[INSTANCE_ID_KEY] === instanceId) {
         return
       }
       if (!rxdb.isLeader()) {
@@ -35,6 +34,33 @@ export const syncChanges = (
       }
       changeStream.change(collection, createChangeEvent(change))
     })
+  }
+}
+
+export const changeRxDB = (
+  collection: RxCollection,
+  change: ChangeEvent,
+  instanceId: string
+) => {
+  const primaryKey = collection.schema.jsonSchema.primaryKey as string
+  switch (change.type) {
+    case ChangeEventType.Create:
+      collection.upsert({
+        ...change.entry,
+        [INSTANCE_ID_KEY]: instanceId,
+      })
+      break
+    case ChangeEventType.Update:
+      collection.upsert({
+        ...change.entry,
+        [INSTANCE_ID_KEY]: instanceId,
+      })
+      break
+    case ChangeEventType.Remove:
+      collection
+        .find({ selector: { [primaryKey]: change.entry[primaryKey] } })
+        .remove()
+      break
   }
 }
 
@@ -53,6 +79,7 @@ export const createChangeEvent = <T extends RxDBEntry>(
       return {
         type: ChangeEventType.Update,
         entry: documentData,
+        // TODO: make a diff with "previousDocumentData"?
         slice: documentData,
         source: CHANGE_SOURCE,
       }

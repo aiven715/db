@@ -32,9 +32,9 @@ export class RxDBHttpSync<T extends RxDBEntry> implements Sync {
     //     createChangeEvent(change)
     //   )
     // })
-    this.options.changeStream
-      .observable(this.options.collectionName)
-      .subscribe(() => this.replicationState?.runPush())
+    // this.options.changeStream
+    //   .observable(this.options.collectionName)
+    //   .subscribe(() => this.replicationState?.runPush())
     this.replicationState = replicateRxCollection<T>({
       collection: this.collection,
       replicationIdentifier: `${this.options.collectionName}_replication`,
