@@ -21,7 +21,7 @@ export const syncChanges = (
       if (change.source === CHANGE_SOURCE) {
         return
       }
-      rxdb.collections.requestspecs.upsert({
+      rxdb.collections[collection].upsert({
         ...change.entry,
         __instanceId: instanceId,
       })
@@ -31,11 +31,7 @@ export const syncChanges = (
         return
       }
       if (!rxdb.isLeader()) {
-        store.update(
-          'requestspecs',
-          change.documentData.id,
-          change.documentData
-        )
+        store.update(collection, change.documentData.id, change.documentData)
       }
       changeStream.change(collection, createChangeEvent(change))
     })
