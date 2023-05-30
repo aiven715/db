@@ -17,10 +17,10 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
 
   static async create<O extends DatabaseOptions>(
     options: O,
-    createLoader: (options: O, changeStream: ChangeStream) => Promise<Loader>
+    createLoader: (changeStream: ChangeStream, options: O) => Promise<Loader>
   ) {
     const changeStream = new ChangeStream()
-    const loader = await createLoader?.(options, changeStream)
+    const loader = await createLoader?.(changeStream, options)
 
     // Can it be a part of a public API?
     const reactiveStore = new ReactiveStore(loader.store, changeStream)

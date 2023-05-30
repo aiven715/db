@@ -8,8 +8,8 @@ import { registry } from './registry'
 export type BootstrapOptions = {
   databaseName: string
   createLoader: (
-    options: DatabaseOptions,
-    changeStream: ChangeStream
+    changeStream: ChangeStream,
+    options: DatabaseOptions
   ) => Promise<Loader>
 }
 
@@ -35,4 +35,6 @@ export const bootstrap = async (options: BootstrapOptions) => {
   for (const Model of registry) {
     Model.database = database
   }
+
+  return { database, registry }
 }
