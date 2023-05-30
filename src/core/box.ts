@@ -13,7 +13,11 @@ class _Box<T> implements Box<T> {
       return new _Box(this.value.then(onFulfilled, onRejected))
     }
     const value = this.value
-    return new _Box(onFulfilled?.(value) || (value as unknown as R1))
+    const result = onFulfilled?.(value)
+    if (result instanceof Box) {
+      return result as Box<R1 | R2>
+    }
+    return new _Box(result || (value as unknown as R1))
   }
 
   catch<R = never>(

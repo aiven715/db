@@ -36,11 +36,10 @@ export class ReactiveStore {
   }
 
   update(collection: string, id: string, slice: Partial<Entry>): Box<void> {
-    return this.store.update(collection, id, slice).then(() =>
+    return this.store.update(collection, id, slice).then((entry) =>
       this.changeStream.change(collection, {
         type: ChangeEventType.Update,
-        // TODO: specify entry once we'll return it from set
-        entry: { id } as Entry,
+        entry,
         slice,
         source: REACTIVE_STORE_CHANGE_SOURCE,
       })

@@ -7,7 +7,6 @@ import { Sync } from '~/core/types'
 import { ChangeStream } from '../../change-stream'
 
 import { RxDBEntry } from './types'
-import { createChangeEvent } from './utils'
 
 export type RxDBHttpSyncOptions = {
   collectionName: string
@@ -26,12 +25,13 @@ export class RxDBHttpSync<T extends RxDBEntry> implements Sync {
   }
 
   start() {
-    this.changeSubscription = this.collection.$.subscribe((change) => {
-      this.options.changeStream.change(
-        this.options.collectionName,
-        createChangeEvent(change)
-      )
-    })
+    // not needed, since it's handled during the loader creation
+    // this.changeSubscription = this.collection.$.subscribe((change) => {
+    //   this.options.changeStream.change(
+    //     this.options.collectionName,
+    //     createChangeEvent(change)
+    //   )
+    // })
     this.options.changeStream
       .observable(this.options.collectionName)
       .subscribe(() => this.replicationState?.runPush())

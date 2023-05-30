@@ -1,25 +1,34 @@
+import Loki from 'lokijs'
+import { RxDatabase } from 'rxdb'
+
 import { Box } from '~/core/box'
 import { NotFoundError } from '~/core/errors'
-import { getLokiCollectionName } from '~/core/loaders/rxdb/utils'
-import { LokiJSStore, LokiJSStoreOptions } from '~/core/stores/lokijs'
-import { DatabaseOptions, Entry, Query } from '~/core/types'
+import { LokiJSStore } from '~/core/stores/lokijs'
+import { createLokiInstance } from '~/core/stores/lokijs/utils'
+import {
+  CollectionConfig,
+  DatabaseOptions,
+  Entry,
+  Query,
+  Store,
+} from '~/core/types'
 
 import { DELETED_KEY } from '../rxdb/constants'
 
-export type RxDBLokiJSStoreOptions = LokiJSStoreOptions & {
-  loki: Loki
-}
+const LokiIncrementalIndexedDBAdapter = require('lokijs/src/incremental-indexeddb-adapter')
 
-export class RxDBLokiJSStore extends LokiJSStore {
+export class RxDBLokiJSStore implements Store {
+  private constructor(private store: LokiJSStore) {}
+
   list(collection: string, query?: Query) {
-    return super.list(collection, {
+    return this.store.list(collection, {
       ...query,
       filter: { ...query?.filter, [DELETED_KEY]: false },
     })
   }
 
   get(collection: string, identifier: string) {
-    return super.get(collection, identifier).then((entry) => {
+    return this.store.get(collection, identifier).then((entry) => {
       if (entry[DELETED_KEY]) {
         throw new NotFoundError(identifier)
       }
@@ -29,30 +38,54 @@ export class RxDBLokiJSStore extends LokiJSStore {
 
   update(collection: string, identifier: string, slice: Partial<Entry>) {
     return this.get(collection, identifier).then(() => {
-      return super.update(collection, identifier, slice)
+      return this.store.update(collection, identifier, slice)
     })
   }
 
   create(collection: string, document: Entry) {
-    return super.create(collection, { ...document, [DELETED_KEY]: false })
+    return this.store.create(collection, { ...document, [DELETED_KEY]: false })
   }
 
   remove(collection: string, identifier: string) {
-    super.update(collection, identifier, { [DELETED_KEY]: true })
+    this.store.update(collection, identifier, { [DELETED_KEY]: true })
     return new Box()
   }
 
-  protected getLokiCollection(collection: string) {
-    const config = this.options.collections[collection]
-    const name = getLokiCollectionName(collection, config)
-    return this.loki.getCollection(name)
+  static async create(options: DatabaseOptions, rxdb: RxDatabase) {
+    const loki = await getLokiInstance(rxdb, options)
+    const store = await LokiJSStore.create(options, {
+      loki,
+      getLokiCollectionName,
+    })
+    return new this(store)
   }
+}
 
-  static create(
-    options: DatabaseOptions,
-    storeOptions: RxDBLokiJSStoreOptions
-  ) {
-    storeOptions.loki.throttledSaves = true
-    return super.create(options, storeOptions) as Promise<RxDBLokiJSStore>
-  }
+const getLokiCollectionName = (
+  collection: string,
+  config: CollectionConfig
+) => {
+  const migrations = config.migrations || []
+  return `${collection}-${migrations.length}`
+}
+
+const getLokiInstance = async (rxdb: RxDatabase, options: DatabaseOptions) => {
+  const localState = await rxdb.internalStore.internals.localState
+  const loki =
+    localState?.databaseState.database ||
+    (await createMemoryLokiInstance(options))
+  loki.throttledSaves = true
+  return loki
+}
+
+const createMemoryLokiInstance = async (options: DatabaseOptions) => {
+  const databaseName = `${options.name}.db`
+  let loki = await createLokiInstance(options, {
+    adapter: new LokiIncrementalIndexedDBAdapter(),
+  })
+  const databaseDump = loki.serialize()
+  loki.close()
+  loki = new Loki(databaseName)
+  loki.loadJSON(databaseDump)
+  return loki
 }

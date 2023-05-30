@@ -2,20 +2,30 @@ import Loki from 'lokijs'
 
 import { Box } from '~/core/box'
 import { NotFoundError } from '~/core/errors'
-import { DatabaseOptions, Entry, Query, Store } from '~/core/types'
+import {
+  CollectionConfig,
+  DatabaseOptions,
+  Entry,
+  Query,
+  Store,
+} from '~/core/types'
 import { mergeObjects } from '~/library/utils'
 
 import { createLokiInstance } from './utils'
 
 export type LokiJSStoreOptions = {
-  lokiOptions?: LokiConfigOptions
   loki?: Loki
+  getLokiCollectionName?: (
+    collection: string,
+    config: CollectionConfig
+  ) => string
 }
 
 export class LokiJSStore implements Store {
-  protected constructor(
-    protected options: DatabaseOptions,
-    protected loki: Loki
+  private constructor(
+    private loki: Loki,
+    private databaseOptions: DatabaseOptions,
+    private storeOptions?: LokiJSStoreOptions
   ) {}
 
   list(collection: string, query?: Query): Box<Entry[]> {
@@ -79,11 +89,15 @@ export class LokiJSStore implements Store {
   }
 
   private getPrimaryKey(collection: string) {
-    return this.options.collections[collection].primaryKey
+    return this.databaseOptions.collections[collection].primaryKey
   }
 
-  protected getLokiCollection(collection: string) {
-    return this.loki.getCollection(collection)
+  private getLokiCollection(collection: string) {
+    const config = this.databaseOptions.collections[collection]
+    const name =
+      this.storeOptions?.getLokiCollectionName?.(collection, config) ||
+      collection
+    return this.loki.getCollection(name)
   }
 
   static async create(
@@ -91,8 +105,7 @@ export class LokiJSStore implements Store {
     storeOptions?: LokiJSStoreOptions
   ) {
     const loki =
-      storeOptions?.loki ||
-      (await createLokiInstance(databaseOptions, storeOptions?.lokiOptions))
-    return new this(databaseOptions, loki)
+      storeOptions?.loki || (await createLokiInstance(databaseOptions))
+    return new this(loki, databaseOptions, storeOptions)
   }
 }
