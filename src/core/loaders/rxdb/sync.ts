@@ -1,48 +1,26 @@
 import { RxDatabase } from 'rxdb'
+import { ReplicationOptions } from 'rxdb/dist/types/types'
 import { replicateRxCollection } from 'rxdb/plugins/replication'
-import { ReplicationPullHandler, ReplicationPushHandler } from 'rxdb/src/types'
 
 import { Sync } from '~/core/types'
 
-import { ChangeStream } from '../../change-stream'
-
 import { RxDBEntry } from './types'
 
-export type RxDBHttpSyncOptions<T extends RxDBEntry> = {
+export type RxDBStartHttpSyncOptions = {
   collectionName: string
-  rxdb: RxDatabase
-  changeStream: ChangeStream
-  pull: (collection: string) => ReplicationPullHandler<T>
-  push: (collection: string) => ReplicationPushHandler<T>
+  replicationOptions: Omit<ReplicationOptions<RxDBEntry>, 'collection'>
 }
 
-export class RxDBHttpSync<T extends RxDBEntry> implements Sync {
-  constructor(private options: RxDBHttpSyncOptions<T>) {}
+export class RxDBHttpSync implements Sync {
+  constructor(private rxdb: RxDatabase) {}
 
-  private replicationState?: ReturnType<typeof replicateRxCollection<T>>
-
-  private get collection() {
-    return this.options.rxdb.collections[this.options.collectionName]
-  }
-
-  start() {
-    const collectionName = this.options.collectionName
-    this.replicationState = replicateRxCollection<T>({
-      collection: this.collection,
-      replicationIdentifier: `${collectionName}_replication`,
-      live: true,
-      pull: {
-        handler: this.options.pull(collectionName),
-      },
-      push: {
-        handler: this.options.push(collectionName),
-        batchSize: 20,
-      },
+  start(options: RxDBStartHttpSyncOptions) {
+    const collection = this.rxdb.collections[options.collectionName]
+    const replicationState = replicateRxCollection({
+      ...options.replicationOptions,
+      collection: collection,
     })
-    this.replicationState.run()
-  }
-
-  async stop() {
-    await this.replicationState?.cancel()
+    replicationState.run()
+    return replicationState
   }
 }

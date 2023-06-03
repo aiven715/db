@@ -4,7 +4,7 @@ import { ChangeStream } from '~/core/change-stream'
 
 import { Collection } from './collection'
 import { ReactiveStore } from './reactive-store'
-import { DatabaseOptions, Loader } from './types'
+import { DatabaseOptions, Loader, Store, Sync } from './types'
 
 type CollectionMap<O extends DatabaseOptions> = {
   [K in keyof O['collections']]: Collection<
@@ -13,7 +13,15 @@ type CollectionMap<O extends DatabaseOptions> = {
 }
 
 export class Database<O extends DatabaseOptions = DatabaseOptions> {
-  private constructor(public collections: CollectionMap<O>) {}
+  private constructor(
+    private store: Store,
+    public sync: Sync,
+    public collections: CollectionMap<O>
+  ) {}
+
+  wipe() {
+    return this.store.wipe()
+  }
 
   static async create<O extends DatabaseOptions>(
     options: O,
@@ -27,15 +35,13 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
 
     const collections = {} as CollectionMap<O>
     for (const [name, config] of Object.entries(options.collections)) {
-      const sync = loader.createSync(name)
       collections[name as keyof CollectionMap<O>] = new Collection(
         name,
         config,
-        reactiveStore,
-        sync
+        reactiveStore
       )
     }
 
-    return new Database(collections)
+    return new Database(loader.store, loader.sync, collections)
   }
 }

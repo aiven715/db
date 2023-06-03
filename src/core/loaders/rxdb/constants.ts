@@ -1,2 +1,5 @@
 export const DELETED_KEY = '_deleted'
+export const ATTACHMENTS_KEY = '_attachments'
+export const META_KEY = '_meta'
+export const REVISION_KEY = '_rev'
 export const CHANGE_SOURCE = 'rxdb'

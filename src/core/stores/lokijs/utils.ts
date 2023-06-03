@@ -10,6 +10,7 @@ export const createLokiInstance = (
     const loki = new Loki(`${options.name}.db`, {
       autoload: true,
       throttledSaves: true,
+      persistenceMethod: 'memory',
       autoloadCallback: () => {
         for (const collection in options.collections) {
           const config = options.collections[collection]

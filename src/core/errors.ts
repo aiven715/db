@@ -4,10 +4,3 @@ export class InternalError extends Error {
     this.name = 'InternalError'
   }
 }
-
-export class NotFoundError extends Error {
-  constructor(identifier: unknown) {
-    super(`Document with primary key "${identifier}" not found`)
-    this.name = 'NotFoundError'
-  }
-}

@@ -1,75 +1,122 @@
 import isEqual from 'lodash/isEqual'
-import { ReplaySubject, Subscription } from 'rxjs'
+import { ReplaySubject } from 'rxjs'
 import { distinctUntilChanged } from 'rxjs/operators'
+import stringify from 'safe-stable-stringify'
+
+import { DeepPartial } from '~/library/types'
 
 import { Box } from './box'
 import { ChangeEventType, ChangeStream } from './change-stream'
 import { Result } from './result'
 import { Entry, Query, Store } from './types'
 
+// For every observing collection, there's one subscription that listens to
+// changes in the change stream and re-fetches all queries for that collection,
+// emits new values to the query subjects, and makes equality check to avoid
+// notifying subscribers if the data has not changed.
+//
+// There are 2 issues with this approach:
+// 1. We re-fetch all queries for a collection even if only one query has changed.
+// 2. We perform expensive equality check on every change for every query result
+// even if the data has not changed.
 export class ReactiveStore {
   private queries = new Map<string, ReplaySubject<Entry[]>>()
-  private entries = new Map<string, ReplaySubject<Entry>>()
-  private subscriptions = new Map<string, Subscription>()
 
   constructor(private store: Store, private changeStream: ChangeStream) {}
 
   list(collection: string, query?: Query): Result<Entry[]> {
     const querySubject = this.getOrCreateQuerySubject(collection, query)
-    // FIXME: does not work properly because we mutate data
     return new Result(querySubject.pipe(distinctUntilChanged(isEqual)))
   }
 
-  get(collection: string, id: string) {
-    const entrySubject = this.getOrCreateEntrySubject(collection, id)
-    return new Result(entrySubject.pipe(distinctUntilChanged(isEqual)))
-  }
-
-  create<T extends Entry>(collection: string, entry: T): Box<void> {
-    return this.store.create(collection, entry).then(() =>
+  insert<T extends Entry>(collection: string, entry: T) {
+    return this.store.insert(collection, entry).then((entry) => {
       this.changeStream.change(collection, {
         type: ChangeEventType.Create,
         entry,
         source: REACTIVE_STORE_CHANGE_SOURCE,
       })
-    )
+      this.notifyAffectedQueries(collection, [entry])
+      return entry as T
+    })
   }
 
-  update(collection: string, id: string, slice: Partial<Entry>): Box<void> {
-    return this.store.update(collection, id, slice).then((entry) =>
-      this.changeStream.change(collection, {
-        type: ChangeEventType.Update,
-        entry,
-        slice,
-        source: REACTIVE_STORE_CHANGE_SOURCE,
-      })
-    )
+  update<T extends Entry>(
+    collection: string,
+    slice: DeepPartial<T>,
+    query?: Query
+  ) {
+    return this.store.update(collection, slice, query).then((entries) => {
+      for (const entry of entries) {
+        this.changeStream.change(collection, {
+          type: ChangeEventType.Update,
+          entry,
+          slice,
+          source: REACTIVE_STORE_CHANGE_SOURCE,
+        })
+      }
+      this.notifyAffectedQueries(collection, entries)
+      return entries as T[]
+    })
   }
 
-  remove(collection: string, id: string): Box<void> {
-    return this.store.remove(collection, id).then(() =>
-      this.changeStream.change(collection, {
-        type: ChangeEventType.Remove,
-        // TODO: specify entry once we'll return it from remove
-        entry: null! as Entry,
-        source: REACTIVE_STORE_CHANGE_SOURCE,
-      })
-    )
+  remove(collection: string, query?: Query): Box<void> {
+    return this.store.remove(collection, query).then((entries) => {
+      for (const entry of entries) {
+        this.changeStream.change(collection, {
+          type: ChangeEventType.Remove,
+          entry,
+          source: REACTIVE_STORE_CHANGE_SOURCE,
+        })
+      }
+      this.notifyAffectedQueries(collection, entries)
+    })
   }
 
-  private observeChanges(collection: string) {
-    if (this.subscriptions.has(collection)) {
-      return
+  private notifyAffectedQueries(collection: string, entries: Entry[]) {
+    const queries = this.getAffectedQueries(collection, entries)
+    for (const [query, subject] of queries) {
+      this.store.list(collection, query).then((items) => subject.next(items))
     }
-    const subscription = this.changeStream
-      .observable(collection)
-      .subscribe((changeEvent) => {
-        this.notifyQueries(collection)
-        if (changeEvent.type === ChangeEventType.Update) {
-          this.notifyEntry(collection, changeEvent.entry.id as string)
+  }
+
+  private getAffectedQueries(collection: string, entries: Entry[]) {
+    const queries = []
+    for (const [key, subject] of this.queries) {
+      const [keyCollection, queryStr] = this.splitKey(key)
+      if (keyCollection === collection) {
+        const query = queryStr ? (JSON.parse(queryStr) as Query) : undefined
+        if (this.matchesQuery(entries, query)) {
+          queries.push([query, subject] as const)
         }
-      })
-    this.subscriptions.set(collection, subscription)
+      }
+    }
+    return queries
+  }
+
+  // TODO: test it
+  private matchesQuery(entries: Entry[], query?: Query) {
+    if (!query) {
+      return true
+    }
+    for (const entry of entries) {
+      if (this.matchesEntry(entry, query)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  private matchesEntry(entry: Entry, query: Query) {
+    if (!query.filter) {
+      return true
+    }
+    for (const [key, value] of Object.entries(query.filter)) {
+      if (entry[key] !== value) {
+        return false
+      }
+    }
+    return true
   }
 
   private getOrCreateQuerySubject(collection: string, query?: Query) {
@@ -79,59 +126,16 @@ export class ReactiveStore {
       return subject
     }
     const newSubject = new ReplaySubject<Entry[]>(1)
-    this.store
-      .list(collection, query)
-      .then((items) => newSubject.next(items))
-      .then(() => this.observeChanges(collection))
+    this.store.list(collection, query).then((items) => newSubject.next(items))
     this.queries.set(key, newSubject)
     return newSubject
   }
 
-  private getOrCreateEntrySubject(collection: string, id: string) {
-    const key = this.identifyEntry(collection, id)
-    const subject = this.entries.get(key)
-    if (subject) {
-      return subject
-    }
-    const newSubject = new ReplaySubject<Entry>(1)
-    this.store
-      .get(collection, id)
-      .then((item) => newSubject.next(item))
-      .then(() => this.observeChanges(collection))
-    this.entries.set(key, newSubject)
-    return newSubject
-  }
-
-  private notifyQueries(collection: string) {
-    for (const [key, subject] of this.queries) {
-      const [keyCollection, queryStr] = this.splitKey(key)
-      if (keyCollection === collection) {
-        const query = queryStr ? JSON.parse(queryStr) : undefined
-        this.store.list(collection, query).then((items) => subject.next(items))
-      }
-    }
-  }
-
-  private notifyEntry(collection: string, id: string) {
-    for (const [key, subject] of this.entries) {
-      const [keyCollection, keyId] = this.splitKey(key)
-      if (keyCollection === collection && keyId === id) {
-        this.store.get(collection, id).then((item) => subject.next(item))
-        break
-      }
-    }
-  }
-
   private identifyQuery(collection: string, query?: Query): string {
-    // TODO: produce the same string regardless of the order of keys
     if (query) {
-      return `${collection}:${JSON.stringify(query)}`
+      return `${collection}:${stringify(query)}`
     }
     return collection
-  }
-
-  private identifyEntry(collection: string, id: string): string {
-    return `${collection}:${id}`
   }
 
   private splitKey(key: string): [string, string | undefined] {

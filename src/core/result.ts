@@ -1,7 +1,9 @@
-import { Observable, combineLatest, firstValueFrom, of } from 'rxjs'
-import { catchError, switchMap } from 'rxjs/operators'
+import { Observable, combineLatest, firstValueFrom, from, of } from 'rxjs'
+import { catchError, switchMap, tap } from 'rxjs/operators'
 
-// TODO: move to model
+import { Box } from '~/core/box'
+
+// TODO: make it lazy?
 export class Result<T> {
   constructor(private observable: Observable<T>) {}
 
@@ -17,6 +19,10 @@ export class Result<T> {
         })
       )
     )
+  }
+
+  tap(fn: (value: T) => void): Result<T> {
+    return new Result(this.observable.pipe(tap(fn)))
   }
 
   switchMap<U>(fn: (value: T) => Result<U>): Result<U> {
@@ -58,5 +64,9 @@ export class Result<T> {
       return new Result(of([]))
     }
     return new Result(combineLatest(items.map((item) => item.observable)))
+  }
+
+  static fromBox<T>(box: Box<T>): Result<T> {
+    return new Result(from(box))
   }
 }

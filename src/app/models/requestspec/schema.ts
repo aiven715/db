@@ -1,5 +1,7 @@
 import z from 'zod'
 
+import { DeepPartial } from '~/library/types'
+
 import { authDefaults, authSchema } from '../common/auth'
 
 export type RequestSpecEntry = z.infer<typeof schema>
@@ -96,7 +98,7 @@ export const schema = z.object({
   }),
 })
 
-export const defaults: Partial<RequestSpecEntry> = {
+export const defaults: DeepPartial<RequestSpecEntry> = {
   collectionId: null,
   name: '',
   orderKey: 'a0',

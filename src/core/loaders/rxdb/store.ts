@@ -1,19 +1,17 @@
 import Loki from 'lokijs'
-import { RxDatabase } from 'rxdb'
+import { RxDatabase, createRevision, getDefaultRxDocumentMeta } from 'rxdb'
 
-import { Box } from '~/core/box'
-import { NotFoundError } from '~/core/errors'
+import { RxDBEntry } from '~/core/loaders/rxdb/types'
 import { LokiJSStore } from '~/core/stores/lokijs'
 import { createLokiInstance } from '~/core/stores/lokijs/utils'
-import {
-  CollectionConfig,
-  DatabaseOptions,
-  Entry,
-  Query,
-  Store,
-} from '~/core/types'
+import { CollectionConfig, DatabaseOptions, Query, Store } from '~/core/types'
 
-import { DELETED_KEY } from '../rxdb/constants'
+import {
+  ATTACHMENTS_KEY,
+  DELETED_KEY,
+  META_KEY,
+  REVISION_KEY,
+} from '../rxdb/constants'
 
 const LokiIncrementalIndexedDBAdapter = require('lokijs/src/incremental-indexeddb-adapter')
 
@@ -27,28 +25,30 @@ export class RxDBLokiJSStore implements Store {
     })
   }
 
-  get(collection: string, identifier: string) {
-    return this.store.get(collection, identifier).then((entry) => {
-      if (entry[DELETED_KEY]) {
-        throw new NotFoundError(identifier)
-      }
-      return entry
+  update(collection: string, slice: Partial<RxDBEntry>, query?: Query) {
+    return this.store.update(collection, slice, {
+      ...query,
+      filter: { ...query?.filter, [DELETED_KEY]: false },
     })
   }
 
-  update(collection: string, identifier: string, slice: Partial<Entry>) {
-    return this.get(collection, identifier).then(() => {
-      return this.store.update(collection, identifier, slice)
-    })
+  insert(collection: string, document: RxDBEntry) {
+    document = {
+      ...document,
+      [DELETED_KEY]: false,
+      [ATTACHMENTS_KEY]: {},
+      [META_KEY]: getDefaultRxDocumentMeta(),
+    }
+    document[REVISION_KEY] = createRevision(document)
+    return this.store.insert(collection, document)
   }
 
-  create(collection: string, document: Entry) {
-    return this.store.create(collection, { ...document, [DELETED_KEY]: false })
+  remove(collection: string, query?: Query) {
+    return this.store.update(collection, { [DELETED_KEY]: true }, query)
   }
 
-  remove(collection: string, identifier: string) {
-    this.store.update(collection, identifier, { [DELETED_KEY]: true })
-    return new Box()
+  wipe() {
+    return this.store.wipe()
   }
 
   static async create(options: DatabaseOptions, rxdb: RxDatabase) {

@@ -1,6 +1,11 @@
-export type DeepPartial<T> = {
-  [P in keyof T]?: DeepPartial<T[P]>
-}
+export type DeepPartial<T> =
+  | (T extends object
+      ? {
+          [P in keyof T]?: DeepPartial<T[P]>
+        }
+      : T)
+  // To make {} satisfy DeepPartial<Something>
+  | {}
 
 export type AnyRecord = Record<string, any>
 

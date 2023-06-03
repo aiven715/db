@@ -3,7 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@auth0/auth0-react": "^2.1.0",
+    "@auth0/auth0-spa-js": "^2.0.7",
     "@automerge/automerge": "^2.0.2",
+    "@sentry/core": "^7.54.0",
+    "deepmerge": "^4.3.1",
     "idb": "^7.1.1",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
@@ -12,8 +16,12 @@
     "proxy-compare": "^2.5.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "rxjs": "^7.8.0",
     "rxdb": "^12.4.3",
+    "rxjs": "^7.8.0",
+    "safe-stable-stringify": "^2.4.3",
+    "type-fest": "^3.11.1",
+    "url-parse": "^1.5.10",
+    "uuid": "^9.0.0",
     "zod": "^3.21.4",
     "zod-to-json-schema": "^3.20.4"
   },
@@ -21,7 +29,8 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
-    "format": "prettier --ignore-path .gitignore --write '**/*.{ts,tsx,js,jsx,md,json}'"
+    "format": "prettier --ignore-path .gitignore --write '**/*.{ts,tsx,js,jsx,md,json}'",
+    "typecheck": "tsc"
   },
   "eslintConfig": {
     "extends": [
@@ -54,6 +63,8 @@
     "@types/node": "^16.18.23",
     "@types/react": "^18.0.32",
     "@types/react-dom": "^18.0.11",
+    "@types/url-parse": "^1.4.8",
+    "@types/uuid": "^9.0.1",
     "craco-wasm": "^0.0.1",
     "prettier": "^2.8.8",
     "react-scripts": "5.0.1",

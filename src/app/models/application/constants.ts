@@ -1,0 +1,1 @@
+export const SHOW_FEEDBACK_PROMPT_AFTER = 10

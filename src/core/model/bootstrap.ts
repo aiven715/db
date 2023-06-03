@@ -19,6 +19,7 @@ export const bootstrap = async (options: BootstrapOptions) => {
   for (const Model of registry) {
     collections[Model.collectionName] = {
       schema: Model.schema,
+      defaults: Model.defaults,
       primaryKey: Model.primaryKey,
       migrations: Model.migrations,
     }

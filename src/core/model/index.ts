@@ -1,40 +1,32 @@
-import { uuid } from '@automerge/automerge'
-import { clone } from 'lodash'
+import merge from 'deepmerge'
 
 import { Database } from '~/core/database'
-import { DatabaseNotFoundError } from '~/core/model/errors'
-import { Include, Relation, getRelations } from '~/core/model/relations'
+import { Result } from '~/core/result'
 import { DeepPartial } from '~/library/types'
 
 import { Entry, Migration, Query, Schema } from '../types'
 
-import { createFieldsProxy } from './fields'
+import { DatabaseNotFoundError, NotFoundError } from './errors'
+import { FieldsResolver } from './fields'
+import { Include, Relation, getRelations } from './relations'
 
 export class Model<T extends Entry> {
   static readonly collectionName: string
   static readonly primaryKey = 'id'
   static readonly schema: Schema
-  // TODO: model should not deal with defaults it should be defined in the schema instead
-  // so database itself will only deal with validation and defaults
-  static readonly defaults: Partial<Entry> = {}
+  static readonly defaults: DeepPartial<Entry> = {}
   static readonly migrations: Migration[] = []
   static readonly relations: Record<string, Relation> = {}
 
   static database?: Database
 
-  // TODO: abstract to a separate class
-  fields: T
-  // #fields: T
-  #patch: DeepPartial<T> = {}
+  readonly fields: T
+  private readonly fieldsResolver: FieldsResolver<T>
 
-  // TODO: should be Partial<T>, since user can do the following:
-  // const model = new Model({ id: '1', name: 'test' })
-  // model.fields.body = { text: { value: 'test' } }
-  // model.save()
-  // TODO: merge with defaults (id + defaults)
+  // TODO: how to make it private?
   constructor(fields: T) {
-    // this.#fields = clone(fields)
-    this.fields = createFieldsProxy(fields, this.#patch)
+    this.fieldsResolver = new FieldsResolver(fields, this.class.schema)
+    this.fields = this.fieldsResolver.effective
   }
 
   get id() {
@@ -42,21 +34,25 @@ export class Model<T extends Entry> {
   }
 
   save() {
-    // TODO: use upsert
+    const query = { filter: { id: this.id } }
     return this.class.collection
-      .update(this.id, clone(this.#patch))
-      .then(() => {
-        // FIXME: won't work with async store
-        // once we'll implement returning data in update:
-        // this.#fields = clone(updated)
-        for (const key in this.#patch) {
-          delete this.#patch[key]
+      .update(this.fieldsResolver.patch, query)
+      .then(([fields]) => {
+        if (!fields) {
+          const { initial, patch } = this.fieldsResolver
+          // Merging initial with path since we can't use this.fields proxy
+          // because it will contain "undefined" for the missing fields which
+          // will override defaults.
+          const fields = merge(initial, patch)
+          return this.class.collection.insert(fields)
         }
+        return fields
       })
+      .then((fields) => this.fieldsResolver.set(fields as T))
   }
 
-  remove() {
-    return this.class.collection.remove(this.id)
+  remove(input?: string | Query) {
+    return this.class.remove(input)
   }
 
   protected get class() {
@@ -72,42 +68,85 @@ export class Model<T extends Entry> {
 
   static get<T extends Entry, M extends typeof Model<T>, I extends Include<M>>(
     this: M,
-    id: string,
+    input?: string | Query,
     include?: I
   ) {
-    return this.collection.get(id).switchMap((fields) => {
-      return getRelations(this, fields as T, include).map((relations) => {
-        const instance = new this(fields as T) as InstanceType<M>
-        return Object.assign(instance, relations)
-      })
+    if (typeof input === 'string') {
+      input = { filter: { id: input } }
+    }
+    input = { ...input, limit: 1 }
+    return (
+      this.collection
+        .list(input)
+        // TODO: should not emit when deleted
+        .tap((items) => {
+          if (items.length === 0) {
+            const filter = (input as Query).filter
+            throw new NotFoundError(this.collectionName, filter)
+          }
+        })
+        .switchMap(([fields]) => this.instantiate(fields, include))
+    )
+  }
+
+  static getOrCreate<
+    T extends Entry,
+    M extends typeof Model<T>,
+    I extends Include<M>
+  >(this: M, fields?: DeepPartial<T>, include?: I) {
+    return this.get({ filter: fields }, include).catch((err) => {
+      if (err instanceof NotFoundError) {
+        return this.create(fields, include)
+      }
+      throw err
     })
   }
 
-  static list<T extends Entry, M extends typeof Model<T>>(
+  static list<T extends Entry, M extends typeof Model<T>, I extends Include<M>>(
     this: M,
     query?: Query,
-    include?: any
+    include?: I
   ) {
     return this.collection
       .list(query)
-      .map((items) =>
-        items.map((fields) => new this(fields as T) as InstanceType<M>)
+      .switchMap((items) =>
+        Result.combineLatest(
+          items.map((fields) => this.instantiate(fields as T, include))
+        )
       )
   }
 
-  static create<T extends Entry, M extends typeof Model<T>>(
-    this: M,
-    fields: T
-  ) {
-    // TODO: return instance and also create a new instance and .save()
-    return this.collection.create(fields)
+  static create<
+    T extends Entry,
+    M extends typeof Model<T>,
+    I extends Include<M>
+  >(this: M, fields?: DeepPartial<T>, include?: I) {
+    // Explicitly casting to T to pretend we have all required fields.
+    // In case some fields are missing, it will be caught by the schema validation
+    // during save, so we won't return invalid instance.
+    const instance = new this(fields as T)
+    const box = instance.save().then(() => instance)
+    // TODO: when Result will be lazy, we won't make a request if no one will subscribe
+    return Result.fromBox(box).switchMap((instance) =>
+      this.get(instance.id, include)
+    )
   }
 
-  static remove(id: string) {
-    return this.collection.remove(id)
+  static remove(input?: string | Query) {
+    if (typeof input === 'string') {
+      input = { filter: { id: input } }
+    }
+    return this.collection.remove(input)
   }
 
-  private static base<T extends Entry>(props: Partial<T>) {
-    return { [this.primaryKey]: uuid(), ...this.defaults, ...props }
+  private static instantiate<
+    T extends Entry,
+    M extends typeof Model<T>,
+    I extends Include<M>
+  >(this: M, fields: T, include?: I) {
+    return getRelations(this, fields as T, include).map((relations) => {
+      const instance = new this(fields as T) as InstanceType<M>
+      return Object.assign(instance, relations)
+    })
   }
 }
