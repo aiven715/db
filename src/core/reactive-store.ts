@@ -32,7 +32,7 @@ export class ReactiveStore {
   insert<T extends Entry>(collection: string, entry: T) {
     return this.store.insert(collection, entry).then((entry) => {
       this.changeStream.change(collection, {
-        type: ChangeEventType.Create,
+        type: ChangeEventType.Insert,
         entry,
         source: REACTIVE_STORE_CHANGE_SOURCE,
       })

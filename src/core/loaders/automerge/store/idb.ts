@@ -38,16 +38,6 @@ export class Idb {
     await db.delete(key(collection), id)
   }
 
-  async transaction(
-    collection: string,
-    callback: (db: IDBPDatabase) => Promise<void>
-  ) {
-    const tx = this.db.transaction(key(collection), 'readwrite')
-    // TODO: test if it works
-    await callback(tx.db)
-    await tx.done
-  }
-
   static async create(options: DatabaseOptions) {
     const db = await idb.openDB(options.name, 1, {
       upgrade: (db) => {

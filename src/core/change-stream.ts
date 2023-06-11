@@ -32,13 +32,13 @@ type BaseChangeEvent = {
 }
 
 export enum ChangeEventType {
-  Create = 'create',
+  Insert = 'insert',
   Update = 'update',
   Remove = 'remove',
 }
 
-export type CreateChangeEvent = BaseChangeEvent & {
-  type: ChangeEventType.Create
+export type InsertChangeEvent = BaseChangeEvent & {
+  type: ChangeEventType.Insert
   entry: Entry
 }
 
@@ -54,6 +54,6 @@ export type RemoveChangeEvent = BaseChangeEvent & {
 }
 
 export type ChangeEvent =
-  | CreateChangeEvent
+  | InsertChangeEvent
   | UpdateChangeEvent
   | RemoveChangeEvent

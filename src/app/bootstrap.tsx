@@ -23,4 +23,6 @@ async function init() {
     createLoader: (changeStream, options) =>
       AutomergeLoader.create(changeStream, options),
   })
+
+  database.sync.start()
 }

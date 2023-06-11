@@ -44,7 +44,7 @@ export const changeRxDB = (
 ) => {
   const primaryKey = collection.schema.jsonSchema.primaryKey as string
   switch (change.type) {
-    case ChangeEventType.Create:
+    case ChangeEventType.Insert:
       collection.upsert({
         ...change.entry,
         [INSTANCE_ID_KEY]: instanceId,
@@ -71,7 +71,7 @@ export const createChangeEvent = <T extends RxDBEntry>(
   switch (operation) {
     case 'INSERT':
       return {
-        type: ChangeEventType.Create,
+        type: ChangeEventType.Insert,
         entry: documentData,
         source: CHANGE_SOURCE,
       }
