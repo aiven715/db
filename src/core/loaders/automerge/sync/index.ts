@@ -16,10 +16,12 @@ export class AutomergeSync implements Sync {
 
   start() {
     for (const collection in this.options.collections) {
+      this.syncClient.pull(collection)
+      this.syncClient.push(collection)
       this.changeStream
         .observable(collection)
         .subscribe((changeEvent) =>
-          this.syncClient.push(changeEvent, collection)
+          this.syncClient.push(collection, changeEvent)
         )
     }
     return () => {}

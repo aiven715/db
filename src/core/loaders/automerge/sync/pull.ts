@@ -1,5 +1,8 @@
 import { getAllChanges, getChangeRootValue } from '../store/automerge'
 
+// TODO: relying on the changes length won't work since both documents
+// can have the same number of changes but these changes can be different
+
 /**
  * First item in the array is the document id
  * Second item in the array is the length of document changes

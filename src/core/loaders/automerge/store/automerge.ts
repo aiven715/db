@@ -31,6 +31,7 @@ export const getChanges = (binary1: Uint8Array, binary2: Uint8Array) => {
   return Automerge.getChanges(deserialize(binary1), deserialize(binary2))
 }
 
+// TODO: both changes can have their own changes
 export const getChangesOfChanges = (changes1: Change[], changes2: Change[]) => {
   const smallest = changes1.length < changes2.length ? changes1 : changes2
   const largest = smallest === changes1 ? changes2 : changes1

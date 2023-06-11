@@ -88,21 +88,25 @@ export class Branch {
    * - the master is updated with the new diff.
    */
   // TODO: rename to applyDiff?
-  async reconcile(collection: string, id: string, diff: Uint8Array[]) {
+  /**
+   * Reconciliation is the process af applying master diff to master
+   * document and subtracting it from the fork diff.
+   */
+  async reconcile(collection: string, id: string, masterDiff: Uint8Array[]) {
     const diffId = getDiffId(id)
     return this.lock.acquire([id, diffId], async () => {
       const master = await this.idb.get(collection, id)
-      const localDiff = await this.idb.get<Uint8Array[]>(collection, diffId)
-      if (!localDiff) {
+      const forkDiff = await this.idb.get<Uint8Array[]>(collection, diffId)
+      if (!forkDiff) {
         throw new Error('Diff not found')
       }
       // TODO: strict equality?
-      if (localDiff.length === diff.length) {
+      if (forkDiff.length === masterDiff.length) {
         await this.idb.remove(collection, diffId)
-        await this.idb.set(collection, id, applyChanges(master, localDiff))
+        await this.idb.set(collection, id, applyChanges(master, forkDiff))
       } else {
-        // TODO: what to do when both localDiff and diff have own changes?
-        const newDiff = getChangesOfChanges(localDiff, diff)
+        // TODO: what to do when both forkDiff and diff have own changes?
+        const newDiff = getChangesOfChanges(forkDiff, masterDiff)
         const newFork = createFork(master, newDiff)
         await this.idb.set(collection, diffId, newDiff)
         await this.idb.set(collection, id, newFork)
@@ -124,3 +128,15 @@ const parseId = (id: string) => id.split(ID_SEPARATOR)
 const createFork = (master: Uint8Array, diff?: Uint8Array[]) => {
   return diff ? applyChanges(master, diff) : master
 }
+
+// ## Reconciliation
+// - local diff does not exist
+//   - diff is applied to master
+// - local diff equal to applying diff
+//   - diff is applied to master
+//   - local diff is removed
+// - applying diff has changes on top of local diff
+//   - diff is applied to master
+//   - local diff is removed
+// - local diff has changes on top of applying diff
+//   - diff is applied to master

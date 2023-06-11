@@ -10,7 +10,10 @@ export class SyncClient {
   constructor(private branch: Branch, private options: DatabaseOptions) {}
 
   // TODO: push also can happen on application start, not only in response to change event
-  async push(changeEvent: ChangeEvent, collection: string) {
+  async push(collection: string, changeEvent?: ChangeEvent) {
+    if (!changeEvent) {
+      throw new Error('Pushing the whole collection is not supported yet')
+    }
     const pushEvent = await createPushEvent(changeEvent)
     await this.request()
     if (pushEvent.type === PushType.Update) {
