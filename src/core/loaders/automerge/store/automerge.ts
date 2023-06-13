@@ -1,5 +1,6 @@
 import * as Automerge from '@automerge/automerge'
 import { Change } from '@automerge/automerge'
+import isEqual from 'lodash/isEqual'
 
 import { Entry } from '~/core/types'
 
@@ -31,11 +32,18 @@ export const getChanges = (binary1: Uint8Array, binary2: Uint8Array) => {
   return Automerge.getChanges(deserialize(binary1), deserialize(binary2))
 }
 
-// TODO: both changes can have their own changes
-export const getChangesOfChanges = (changes1: Change[], changes2: Change[]) => {
-  const smallest = changes1.length < changes2.length ? changes1 : changes2
-  const largest = smallest === changes1 ? changes2 : changes1
-  return largest.slice(smallest.length)
+// Returns changes that are in diff2 but not in diff1
+export const diffDiffs = (diff1: Change[], diff2: Change[]) => {
+  const changes = []
+  for (let i = 0; i < diff2.length; i++) {
+    const change1 = diff1[i]
+    const change2 = diff2[i]
+    if (isEqual(change1, change2)) {
+      continue
+    }
+    changes.push(change2)
+  }
+  return changes
 }
 
 export const applyChanges = (binary: Uint8Array, changes: Change[]) => {

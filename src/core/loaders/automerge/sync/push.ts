@@ -11,6 +11,8 @@ export enum PushType {
 type PushInsertEvent = {
   type: PushType.Insert
   id: string
+  // TODO: should return document in the form of Change[]? to be consistent
+  //       and have only one way of representing changes
   document: Uint8Array
 }
 

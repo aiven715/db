@@ -1,7 +1,13 @@
 import { getAllChanges, getChangeRootValue } from '../store/automerge'
 
 // TODO: relying on the changes length won't work since both documents
-// can have the same number of changes but these changes can be different
+//       can have the same number of changes but these changes can be different
+//       update: it will, since we compare replicated changes
+
+// TODO: introduce id + updatedAt as a checkpoint
+//       updateAt will be controlled by the server, so we can use it to
+//       determine which document is the most recent one for pull
+//       pull response will return the recent master documents
 
 /**
  * First item in the array is the document id

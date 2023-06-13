@@ -26,7 +26,11 @@ export class SyncClient {
     const primaryKey = this.options.collections[collection].primaryKey
     const pullEvent = createPullEvent(masters, primaryKey)
     await this.request()
-    // TODO: reconcile?
+    // TODO: save incoming documents as new masters
+  }
+
+  async listen() {
+    // TODO: listen for changes from master and reconcile
   }
 
   private async request() {}

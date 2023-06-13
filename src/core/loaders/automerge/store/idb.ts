@@ -21,7 +21,7 @@ export class Idb {
     collection: string,
     id: string,
     db = this.db
-  ): Promise<T> {
+  ): Promise<T | undefined> {
     return db.get(key(collection), id)
   }
 
