@@ -13,6 +13,10 @@ export const deserialize = <T extends Entry>(binary: Uint8Array) => {
   return Automerge.load<T>(binary) as T
 }
 
+export const init = () => {
+  return Automerge.save(Automerge.init())
+}
+
 export const compact = (binary: Uint8Array) => {
   return serialize(deserialize(binary))
 }

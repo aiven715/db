@@ -4,7 +4,7 @@ import { DatabaseOptions } from '~/core/types'
 import { Branch } from '../store/branch'
 
 import { createPullEvent } from './pull'
-import { PushType, createPushEvent } from './push'
+import { createPushEvent } from './push'
 
 export class SyncClient {
   constructor(private branch: Branch, private options: DatabaseOptions) {}
@@ -16,9 +16,7 @@ export class SyncClient {
     }
     const pushEvent = await createPushEvent(changeEvent)
     await this.request()
-    if (pushEvent.type === PushType.Update) {
-      await this.branch.reconcile(collection, pushEvent.id, pushEvent.diff)
-    }
+    await this.branch.reconcile(collection, pushEvent.id, pushEvent.diff)
   }
 
   async pull(collection: string) {

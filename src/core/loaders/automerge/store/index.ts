@@ -1,7 +1,7 @@
 import { LokiJSStore } from '~/core/stores/lokijs'
 import { DatabaseOptions, Entry, Query, Store } from '~/core/types'
 
-import { BINARY_DIFF_SYMBOL, BINARY_DOCUMENT_SYMBOL } from '../constants'
+import { BINARY_DIFF_SYMBOL } from '../constants'
 import { ForkEntry } from '../types'
 
 import { deserialize } from './automerge'
@@ -21,7 +21,7 @@ export class AutomergeStore implements Store {
   insert(collection: string, entry: Entry) {
     return this.store.insert(collection, entry).then((entry) => {
       const id = this.id(entry, collection)
-      ;(entry as ForkEntry)[BINARY_DOCUMENT_SYMBOL] = this.branch.insert(
+      ;(entry as ForkEntry)[BINARY_DIFF_SYMBOL] = this.branch.insert(
         collection,
         id,
         entry

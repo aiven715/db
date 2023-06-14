@@ -4,8 +4,11 @@ import { DatabaseOptions, Entry } from '~/core/types'
 
 import {
   applyChanges,
+  deserialize,
   diffDiffs,
+  getAllChanges,
   getChanges,
+  init,
   serialize,
   update,
 } from './automerge'
@@ -18,10 +21,12 @@ export class Branch {
   private constructor(private idb: Idb) {}
 
   async insert(collection: string, id: string, entry: Entry) {
-    const binary = serialize(entry)
+    const master = init()
+    const diff = getAllChanges(serialize(entry))
     return this.acquireLock(id, async () => {
-      await this.idb.set(collection, id, binary)
-      return binary
+      await this.setDiff(collection, id, diff)
+      await this.setMaster(collection, id, master)
+      return diff
     })
   }
 
