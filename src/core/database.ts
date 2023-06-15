@@ -31,7 +31,11 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
     const loader = await createLoader?.(changeStream, options)
 
     // Can it be a part of a public API?
-    const reactiveStore = new ReactiveStore(loader.store, changeStream)
+    const reactiveStore = ReactiveStore.create(
+      options,
+      loader.store,
+      changeStream
+    )
 
     const collections = {} as CollectionMap<O>
     for (const [name, config] of Object.entries(options.collections)) {

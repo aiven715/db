@@ -33,4 +33,9 @@ export class Collection<T extends Entry = Entry> {
   remove(query?: Query) {
     return this.reactiveStore.remove(this.name, query)
   }
+
+  static create<T extends Entry = Entry>(
+    name: string,
+    config: CollectionConfig<T>
+  ) {}
 }

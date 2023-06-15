@@ -70,7 +70,7 @@ const initialData = {
 const create = async () => {
   const store = await LokiJSStore.create(databaseOptions, { initialData })
   const changeStream = new ChangeStream()
-  return new ReactiveStore(store, changeStream)
+  return ReactiveStore.create(databaseOptions, store, changeStream)
 }
 
 describe('notify only affected queries', () => {
