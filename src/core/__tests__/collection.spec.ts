@@ -2,14 +2,16 @@ import { uuid } from '@automerge/automerge'
 import z from 'zod'
 
 import { ChangeStream } from '../change-stream'
-import { ReactiveStore } from '../reactive-store'
+import { Collection } from '../collection'
 import { LokiJSStore } from '../stores/lokijs'
 import { DatabaseOptions } from '../types'
+
+const COLLECTION_NAME = 'requests'
 
 const databaseOptions: DatabaseOptions = {
   name: 'test',
   collections: {
-    requests: {
+    [COLLECTION_NAME]: {
       primaryKey: 'id',
       schema: z.object({
         id: z.string().default(() => uuid()),
@@ -18,18 +20,11 @@ const databaseOptions: DatabaseOptions = {
         url: z.string().default(''),
       }),
     },
-    collections: {
-      primaryKey: 'id',
-      schema: z.object({
-        id: z.string().default(() => uuid()),
-        name: z.string().default(''),
-      }),
-    },
   },
 }
 
 const initialData = {
-  requests: [
+  [COLLECTION_NAME]: [
     {
       id: '1',
       collectionId: '1',
@@ -55,32 +50,27 @@ const initialData = {
       url: 'https://jsonplaceholder.typicode.com/posts/1',
     },
   ],
-  collections: [
-    {
-      id: '1',
-      name: 'todos',
-    },
-    {
-      id: '2',
-      name: 'posts',
-    },
-  ],
 }
 
 const create = async () => {
   const store = await LokiJSStore.create(databaseOptions, { initialData })
   const changeStream = new ChangeStream()
-  return ReactiveStore.create(databaseOptions, store, changeStream)
+  return Collection.create(
+    store,
+    changeStream,
+    COLLECTION_NAME,
+    databaseOptions.collections.requests
+  )
 }
 
 describe('notify only affected queries', () => {
   test('update and filter', async () => {
-    const reactiveStore = await create()
+    const collection = await create()
 
-    const todos = reactiveStore.list('requests', {
+    const todos = collection.list({
       filter: { collectionId: '1' },
     })
-    const posts = reactiveStore.list('requests', {
+    const posts = collection.list({
       filter: { collectionId: '2' },
     })
 
@@ -90,11 +80,7 @@ describe('notify only affected queries', () => {
     todos.asObservable().subscribe(todosQuerySpy)
     posts.asObservable().subscribe(postsQuerySpy)
 
-    await reactiveStore.update(
-      'requests',
-      { url: 'foo' },
-      { filter: { id: '1' } }
-    )
+    await collection.update({ url: 'foo' }, { filter: { id: '1' } })
 
     expect(todosQuerySpy).toHaveBeenCalledTimes(2)
     expect(postsQuerySpy).toHaveBeenCalledTimes(1)

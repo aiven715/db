@@ -3,7 +3,6 @@ import z from 'zod'
 import { ChangeStream } from '~/core/change-stream'
 
 import { Collection } from './collection'
-import { ReactiveStore } from './reactive-store'
 import { DatabaseOptions, Loader, Store, Sync } from './types'
 
 type CollectionMap<O extends DatabaseOptions> = {
@@ -30,19 +29,13 @@ export class Database<O extends DatabaseOptions = DatabaseOptions> {
     const changeStream = new ChangeStream()
     const loader = await createLoader?.(changeStream, options)
 
-    // Can it be a part of a public API?
-    const reactiveStore = ReactiveStore.create(
-      options,
-      loader.store,
-      changeStream
-    )
-
     const collections = {} as CollectionMap<O>
     for (const [name, config] of Object.entries(options.collections)) {
-      collections[name as keyof CollectionMap<O>] = new Collection(
+      collections[name as keyof CollectionMap<O>] = Collection.create(
+        loader.store,
+        changeStream,
         name,
-        config,
-        reactiveStore
+        config
       )
     }
 
