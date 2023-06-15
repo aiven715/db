@@ -5,7 +5,7 @@ import {
   ChangeEventSource,
   ChangeStream,
 } from '~/core/change-stream'
-import { LiveQueries } from '~/core/live-queries'
+import { ReactiveData } from '~/core/reactive-data'
 import { DeepPartial } from '~/library/types'
 
 import { Result } from './result'
@@ -17,11 +17,11 @@ export class Collection<T extends Entry = Entry> {
     private config: CollectionConfig<T>,
     private store: Store,
     private changeStream: ChangeStream,
-    private liveQueries: LiveQueries
+    private reactiveData: ReactiveData
   ) {}
 
   list(query?: Query) {
-    return new Result(this.liveQueries.observable(query)) as Result<T[]>
+    return new Result(this.reactiveData.observable(query)) as Result<T[]>
   }
 
   insert(entry: DeepPartial<T> = {}) {
@@ -76,10 +76,11 @@ export class Collection<T extends Entry = Entry> {
     name: string,
     config: CollectionConfig<T>
   ) {
-    const liveQueries = new LiveQueries(name, store)
+    const reactiveData = new ReactiveData(name, store)
     changeStream.observable(name).subscribe((changeEvents) => {
-      liveQueries.notify(changeEvents.map((e) => e.entry))
+      const entries = changeEvents.map((e) => e.entry)
+      reactiveData.notify(entries)
     })
-    return new this(name, config, store, changeStream, liveQueries)
+    return new this(name, config, store, changeStream, reactiveData)
   }
 }

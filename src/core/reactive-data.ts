@@ -5,7 +5,7 @@ import stringify from 'safe-stable-stringify'
 
 import { Entry, Query, Store } from '~/core/types'
 
-export class LiveQueries {
+export class ReactiveData {
   private queries = new Map<string, ReplaySubject<Entry[]>>()
 
   constructor(private collection: string, private store: Store) {}
