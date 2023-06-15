@@ -4,11 +4,11 @@ import { RxChangeEvent, RxCollection, RxDatabase } from 'rxdb'
 import {
   ChangeEvent,
   ChangeEventAction,
+  ChangeEventSource,
   ChangeStream,
 } from '../../change-stream'
 import { DatabaseOptions } from '../../types'
 
-import { CHANGE_SOURCE } from './constants'
 import { RxDBLokiJSStore } from './store'
 import { RxDBEntry } from './types'
 
@@ -23,11 +23,13 @@ export const syncChanges = (
   const instanceId = uuid()
 
   for (const collection in options.collections) {
-    changeStream.observable(collection).subscribe((change) => {
-      if (change.source === CHANGE_SOURCE) {
-        return
+    changeStream.observable(collection).subscribe((changes) => {
+      for (const change of changes) {
+        if (change.source === ChangeEventSource.External) {
+          return
+        }
+        changeRxDB(rxdb.collections[collection], change, instanceId)
       }
-      changeRxDB(rxdb.collections[collection], change, instanceId)
     })
     rxdb.collections[collection].$.subscribe((change) => {
       if (change.documentData[INSTANCE_ID_KEY] === instanceId) {
@@ -36,7 +38,7 @@ export const syncChanges = (
       if (!rxdb.isLeader()) {
         store.update(collection, change.documentData.id, change.documentData)
       }
-      changeStream.change(collection, createChangeEvent(change))
+      changeStream.change(collection, [createChangeEvent(change)])
     })
   }
 }
@@ -77,7 +79,7 @@ export const createChangeEvent = <T extends RxDBEntry>(
       return {
         action: ChangeEventAction.Insert,
         entry: documentData,
-        source: CHANGE_SOURCE,
+        source: ChangeEventSource.External,
       }
     case 'UPDATE':
       return {
@@ -85,13 +87,13 @@ export const createChangeEvent = <T extends RxDBEntry>(
         entry: documentData,
         // TODO: make a diff with "previousDocumentData"?
         slice: documentData,
-        source: CHANGE_SOURCE,
+        source: ChangeEventSource.External,
       }
     case 'DELETE':
       return {
         action: ChangeEventAction.Remove,
         entry: null! as T,
-        source: CHANGE_SOURCE,
+        source: ChangeEventSource.External,
       }
   }
 }

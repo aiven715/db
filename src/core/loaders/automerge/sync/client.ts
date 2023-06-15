@@ -1,7 +1,6 @@
-import { ChangeEvent } from '~/core/change-stream'
+import { ChangeEvent, ChangeEventSource } from '~/core/change-stream'
 import { DatabaseOptions } from '~/core/types'
 
-import { CHANGE_SOURCE } from '../constants'
 import { Branch } from '../store/branch'
 
 import { createPullEvent } from './pull'
@@ -16,7 +15,7 @@ export class SyncClient {
     if (!changeEvent) {
       throw new Error('Pushing the whole collection is not supported yet')
     }
-    if (changeEvent.source === CHANGE_SOURCE) {
+    if (changeEvent.source === ChangeEventSource.External) {
       return
     }
     const pushEvent = await createPushEvent(changeEvent)

@@ -3,17 +3,16 @@ import { Subject } from 'rxjs'
 import { Entry } from './types'
 
 export class ChangeStream {
-  private subjects = new Map<string, Subject<ChangeEvent>>()
+  private subjects = new Map<string, Subject<ChangeEvent[]>>()
 
   observable(collection: string) {
     const subject = this.getOrCreateCollectionSubject(collection)
     return subject.asObservable()
   }
 
-  // TODO: accept "events": ChangeEvent[]
-  change(collection: string, event: ChangeEvent) {
+  change(collection: string, events: ChangeEvent[]) {
     const subject = this.getOrCreateCollectionSubject(collection)
-    subject.next(event)
+    subject.next(events)
   }
 
   private getOrCreateCollectionSubject(collection: string) {
@@ -21,7 +20,7 @@ export class ChangeStream {
     if (subject) {
       return subject
     }
-    const newSubject = new Subject<ChangeEvent>()
+    const newSubject = new Subject<ChangeEvent[]>()
     this.subjects.set(collection, newSubject)
     return newSubject
   }
@@ -29,7 +28,7 @@ export class ChangeStream {
 
 type BaseChangeEvent = {
   entry: Entry
-  source: string
+  source: ChangeEventSource
 }
 
 export enum ChangeEventSource {

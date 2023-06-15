@@ -6,7 +6,11 @@ import stringify from 'safe-stable-stringify'
 import { DeepPartial } from '~/library/types'
 
 import { Box } from './box'
-import { ChangeEventAction, ChangeStream } from './change-stream'
+import {
+  ChangeEventAction,
+  ChangeEventSource,
+  ChangeStream,
+} from './change-stream'
 import { Result } from './result'
 import { Entry, Query, Store } from './types'
 
@@ -31,11 +35,13 @@ export class ReactiveStore {
 
   insert<T extends Entry>(collection: string, entry: T) {
     return this.store.insert(collection, entry).then((entry) => {
-      this.changeStream.change(collection, {
-        action: ChangeEventAction.Insert,
-        entry,
-        source: REACTIVE_STORE_CHANGE_SOURCE,
-      })
+      this.changeStream.change(collection, [
+        {
+          action: ChangeEventAction.Insert,
+          entry,
+          source: ChangeEventSource.Internal,
+        },
+      ])
       this.notifyAffectedQueries(collection, [entry])
       return entry as T
     })
@@ -47,14 +53,15 @@ export class ReactiveStore {
     query?: Query
   ) {
     return this.store.update(collection, slice, query).then((entries) => {
-      for (const entry of entries) {
-        this.changeStream.change(collection, {
+      this.changeStream.change(
+        collection,
+        entries.map((entry) => ({
           action: ChangeEventAction.Update,
           entry,
           slice,
-          source: REACTIVE_STORE_CHANGE_SOURCE,
-        })
-      }
+          source: ChangeEventSource.Internal,
+        }))
+      )
       this.notifyAffectedQueries(collection, entries)
       return entries as T[]
     })
@@ -62,13 +69,14 @@ export class ReactiveStore {
 
   remove(collection: string, query?: Query): Box<void> {
     return this.store.remove(collection, query).then((entries) => {
-      for (const entry of entries) {
-        this.changeStream.change(collection, {
+      this.changeStream.change(
+        collection,
+        entries.map((entry) => ({
           action: ChangeEventAction.Remove,
           entry,
-          source: REACTIVE_STORE_CHANGE_SOURCE,
-        })
-      }
+          source: ChangeEventSource.Internal,
+        }))
+      )
       this.notifyAffectedQueries(collection, entries)
     })
   }
@@ -148,5 +156,3 @@ export class ReactiveStore {
     return [collection, query]
   }
 }
-
-export const REACTIVE_STORE_CHANGE_SOURCE = 'LOCAL'
