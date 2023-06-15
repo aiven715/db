@@ -1,6 +1,7 @@
 import { ChangeEvent } from '~/core/change-stream'
 import { DatabaseOptions } from '~/core/types'
 
+import { CHANGE_SOURCE } from '../constants'
 import { Branch } from '../store/branch'
 
 import { createPullEvent } from './pull'
@@ -10,13 +11,17 @@ export class SyncClient {
   constructor(private branch: Branch, private options: DatabaseOptions) {}
 
   // TODO: push also can happen on application start, not only in response to change event
+  // TODO: accept changeEvents: ChangeEvent[]
   async push(collection: string, changeEvent?: ChangeEvent) {
     if (!changeEvent) {
       throw new Error('Pushing the whole collection is not supported yet')
     }
+    if (changeEvent.source === CHANGE_SOURCE) {
+      return
+    }
     const pushEvent = await createPushEvent(changeEvent)
     await this.request()
-    await this.branch.reconcile(collection, pushEvent.id, pushEvent.diff)
+    // await this.branch.reconcile(collection, pushEvent.id, pushEvent.diff)
   }
 
   async pull(collection: string) {

@@ -1,7 +1,11 @@
 import { uuid } from '@automerge/automerge'
 import { RxChangeEvent, RxCollection, RxDatabase } from 'rxdb'
 
-import { ChangeEvent, ChangeEventType, ChangeStream } from '../../change-stream'
+import {
+  ChangeEvent,
+  ChangeEventAction,
+  ChangeStream,
+} from '../../change-stream'
 import { DatabaseOptions } from '../../types'
 
 import { CHANGE_SOURCE } from './constants'
@@ -43,20 +47,20 @@ export const changeRxDB = (
   instanceId: string
 ) => {
   const primaryKey = collection.schema.jsonSchema.primaryKey as string
-  switch (change.type) {
-    case ChangeEventType.Insert:
+  switch (change.action) {
+    case ChangeEventAction.Insert:
       collection.upsert({
         ...change.entry,
         [INSTANCE_ID_KEY]: instanceId,
       })
       break
-    case ChangeEventType.Update:
+    case ChangeEventAction.Update:
       collection.upsert({
         ...change.entry,
         [INSTANCE_ID_KEY]: instanceId,
       })
       break
-    case ChangeEventType.Remove:
+    case ChangeEventAction.Remove:
       collection
         .find({ selector: { [primaryKey]: change.entry[primaryKey] } })
         .remove()
@@ -71,13 +75,13 @@ export const createChangeEvent = <T extends RxDBEntry>(
   switch (operation) {
     case 'INSERT':
       return {
-        type: ChangeEventType.Insert,
+        action: ChangeEventAction.Insert,
         entry: documentData,
         source: CHANGE_SOURCE,
       }
     case 'UPDATE':
       return {
-        type: ChangeEventType.Update,
+        action: ChangeEventAction.Update,
         entry: documentData,
         // TODO: make a diff with "previousDocumentData"?
         slice: documentData,
@@ -85,7 +89,7 @@ export const createChangeEvent = <T extends RxDBEntry>(
       }
     case 'DELETE':
       return {
-        type: ChangeEventType.Remove,
+        action: ChangeEventAction.Remove,
         entry: null! as T,
         source: CHANGE_SOURCE,
       }

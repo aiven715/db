@@ -10,6 +10,7 @@ export class ChangeStream {
     return subject.asObservable()
   }
 
+  // TODO: accept "events": ChangeEvent[]
   change(collection: string, event: ChangeEvent) {
     const subject = this.getOrCreateCollectionSubject(collection)
     subject.next(event)
@@ -31,25 +32,30 @@ type BaseChangeEvent = {
   source: string
 }
 
-export enum ChangeEventType {
+export enum ChangeEventSource {
+  Internal = 'internal',
+  External = 'external',
+}
+
+export enum ChangeEventAction {
   Insert = 'insert',
   Update = 'update',
   Remove = 'remove',
 }
 
 export type InsertChangeEvent = BaseChangeEvent & {
-  type: ChangeEventType.Insert
+  action: ChangeEventAction.Insert
   entry: Entry
 }
 
 export type UpdateChangeEvent = BaseChangeEvent & {
-  type: ChangeEventType.Update
+  action: ChangeEventAction.Update
   entry: Entry
   slice: Partial<Entry>
 }
 
 export type RemoveChangeEvent = BaseChangeEvent & {
-  type: ChangeEventType.Remove
+  action: ChangeEventAction.Remove
   entry: Entry
 }
 

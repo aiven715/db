@@ -14,7 +14,7 @@ export class AutomergeSync implements Sync {
     private options: DatabaseOptions
   ) {}
 
-  start() {
+  async start() {
     for (const collection in this.options.collections) {
       // this.syncClient.pull(collection)
       // this.syncClient.push(collection)

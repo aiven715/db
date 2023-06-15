@@ -6,7 +6,7 @@ import stringify from 'safe-stable-stringify'
 import { DeepPartial } from '~/library/types'
 
 import { Box } from './box'
-import { ChangeEventType, ChangeStream } from './change-stream'
+import { ChangeEventAction, ChangeStream } from './change-stream'
 import { Result } from './result'
 import { Entry, Query, Store } from './types'
 
@@ -32,7 +32,7 @@ export class ReactiveStore {
   insert<T extends Entry>(collection: string, entry: T) {
     return this.store.insert(collection, entry).then((entry) => {
       this.changeStream.change(collection, {
-        type: ChangeEventType.Insert,
+        action: ChangeEventAction.Insert,
         entry,
         source: REACTIVE_STORE_CHANGE_SOURCE,
       })
@@ -49,7 +49,7 @@ export class ReactiveStore {
     return this.store.update(collection, slice, query).then((entries) => {
       for (const entry of entries) {
         this.changeStream.change(collection, {
-          type: ChangeEventType.Update,
+          action: ChangeEventAction.Update,
           entry,
           slice,
           source: REACTIVE_STORE_CHANGE_SOURCE,
@@ -64,7 +64,7 @@ export class ReactiveStore {
     return this.store.remove(collection, query).then((entries) => {
       for (const entry of entries) {
         this.changeStream.change(collection, {
-          type: ChangeEventType.Remove,
+          action: ChangeEventAction.Remove,
           entry,
           source: REACTIVE_STORE_CHANGE_SOURCE,
         })

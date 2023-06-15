@@ -3,6 +3,8 @@ import { IDBPDatabase } from 'idb'
 
 import { DatabaseOptions } from '~/core/types'
 
+import { META_COLLECTION_KEY } from './constants'
+
 export class Idb {
   constructor(private db: IDBPDatabase) {}
 
@@ -42,9 +44,11 @@ export class Idb {
     const db = await idb.openDB(options.name, 1, {
       upgrade: (db) => {
         for (const collectionName in options.collections) {
+          // const collection = options.collections[collectionName]
+          // const version = collection.migrations?.length || 0
           db.createObjectStore(key(collectionName))
         }
-        db.createObjectStore('indexes')
+        db.createObjectStore(META_COLLECTION_KEY)
       },
     })
     return new Idb(db)

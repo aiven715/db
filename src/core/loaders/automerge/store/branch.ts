@@ -4,7 +4,6 @@ import { DatabaseOptions, Entry } from '~/core/types'
 
 import {
   applyChanges,
-  deserialize,
   diffDiffs,
   getAllChanges,
   getChanges,
