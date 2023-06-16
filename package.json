@@ -13,6 +13,7 @@
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
     "lokijs": "^1.5.12",
+    "mock-socket": "^9.2.1",
     "p-queue": "^7.3.4",
     "proxy-compare": "^2.5.1",
     "react": "^18.2.0",

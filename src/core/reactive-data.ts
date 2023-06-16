@@ -6,7 +6,7 @@ import stringify from 'safe-stable-stringify'
 import { Entry, Query, Store } from '~/core/types'
 
 export class ReactiveData {
-  private queries = new Map<string, ReplaySubject<Entry[]>>()
+  private subjects = new Map<string, ReplaySubject<Entry[]>>()
 
   constructor(private collection: string, private store: Store) {}
 
@@ -21,20 +21,20 @@ export class ReactiveData {
 
   public observable(query?: Query) {
     const key = this.stringifyQuery(query)
-    let subject = this.queries.get(key)
+    let subject = this.subjects.get(key)
     if (!subject) {
       subject = new ReplaySubject<Entry[]>(1)
       this.store
         .list(this.collection, query)
         .then((items) => subject!.next(items))
-      this.queries.set(key, subject)
+      this.subjects.set(key, subject)
     }
     return subject.pipe(distinctUntilChanged(isEqual))
   }
 
   private getAffectedQueries(entries: Entry[]) {
     const queries = []
-    for (const [queryStr, subject] of this.queries) {
+    for (const [queryStr, subject] of this.subjects) {
       const query = this.parseQuery(queryStr)
       if (this.matchesQuery(entries, query)) {
         queries.push([query, subject] as const)

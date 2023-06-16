@@ -8,10 +8,10 @@ import { Sidebar } from './Sidebar'
 export const Root = () => {
   const { state } = useAppState()
   return (
-    <div className='flex items-start text-white font-mono'>
+    <>
       <Sidebar />
       {state.selectedRequestSpecId && <Content />}
-    </div>
+    </>
   )
 }
 

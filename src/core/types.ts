@@ -36,6 +36,7 @@ export interface Sync {
   start(...args: unknown[]): unknown
 }
 
+// TODO: rename to Backend
 // TODO: should migration/validation also be a loader?
 export interface Loader {
   store: Store
