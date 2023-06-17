@@ -2,7 +2,7 @@ import * as idb from 'idb'
 
 const STORE_KEY = 'documents'
 
-export class Storage {
+export class Idb {
   private constructor(private db: idb.IDBPDatabase) {}
 
   async list() {

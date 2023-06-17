@@ -45,19 +45,47 @@ export class ClientSync implements Sync {
     this.socket!.send(newBuffer)
   }
 
-  private onMessage = (message: ArrayBuffer) => {
+  private onMessage = async (message: ArrayBuffer) => {
     const binary = new Uint8Array(message)
     const type = binary[0]
     const payload = binary.subarray(1)
     switch (type) {
       case 0x00: {
-        const document = Automerge.load(payload) as Todo
-        this.store.create(document)
+        await this.store.set(binary)
+        return
+      }
+      case 0x01: {
+        const binaryId = payload.subarray(0, 32)
+        const syncMessage = payload.subarray(32)
+        const id = new TextDecoder().decode(binaryId)
+        // TODO: what if we'll get update of a document which does not exist?
+        //       can we get it?
+        const [document, syncState] = Automerge.receiveSyncMessage(
+          await this.store.get(id),
+          this.getOrCreateSyncState(id),
+          syncMessage
+        )
+        const binary = Automerge.save(document)
+        await this.store.set(binary)
+        this.setSyncState(id, syncState)
         return
       }
       default:
         throw new Error('Unknown first byte')
     }
+  }
+
+  private setSyncState(id: string, syncState: SyncState) {
+    this.syncStates.set(id, syncState)
+  }
+
+  private getOrCreateSyncState(id: string) {
+    let syncState = this.syncStates.get(id)
+    if (!syncState) {
+      syncState = Automerge.initSyncState()
+      this.setSyncState(id, syncState)
+    }
+    return syncState
   }
 
   private onConnect = (event: Event) => {

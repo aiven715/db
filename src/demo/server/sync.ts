@@ -43,14 +43,14 @@ export class ServerSync implements Sync {
   }
 
   // TODO: lock document
-  private onMessage = (socket: ClientSocket, message: ArrayBuffer) => {
+  private onMessage = async (socket: ClientSocket, message: ArrayBuffer) => {
     const binary = new Uint8Array(message)
     const type = binary[0]
     const payload = binary.subarray(1)
     switch (type) {
       case 0x00: {
         const document = Automerge.load(payload) as Todo
-        this.store.create(document)
+        await this.store.create(document)
         for (const client of this.socket!.clients()) {
           if (client === socket) {
             continue
@@ -65,8 +65,7 @@ export class ServerSync implements Sync {
         const syncMessage = payload.subarray(32)
         const id = new TextDecoder().decode(binaryId)
         const [document, syncState] = Automerge.receiveSyncMessage(
-          // TODO: get from store
-          Automerge.init(),
+          await this.store.get(id),
           this.getOrCreateSyncState(id, clientId),
           syncMessage
         )
