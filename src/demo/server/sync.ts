@@ -2,12 +2,10 @@ import * as Automerge from '@automerge/automerge'
 import { SyncState } from '@automerge/automerge'
 import { Client as ClientSocket, Server as ServerSocket } from 'mock-socket'
 
-import { Todo } from '~/demo/types'
+import { CLIENT_ID_PARAM_KEY, SERVER_URL } from '~/demo/constants'
 
 import { Store } from '../store'
 import { Sync } from '../sync'
-
-import { CLIENT_ID_PARAM_KEY, SERVER_URL } from './constants'
 
 export type ServerSyncOptions = {
   onClientsChange?: (clients: ClientSocket[]) => void
@@ -42,6 +40,37 @@ export class ServerSync implements Sync {
     this.options.onStop?.()
   }
 
+  create(binary: Uint8Array, sockets: ClientSocket[] = this.socket!.clients()) {
+    const newBuffer = new ArrayBuffer(1 + binary.byteLength)
+    const newBytes = new Uint8Array(newBuffer)
+    newBytes[0] = 0x00
+    newBytes.set(binary, 1)
+    for (const client of sockets) {
+      client.send(newBytes.buffer)
+    }
+  }
+
+  update(id: string, binary: Uint8Array) {
+    for (const client of this.socket!.clients()) {
+      const clientId = this.getClientId(client)
+      const syncState = this.getOrCreateSyncState(id, clientId)
+      const [nextSyncState, nextSyncMessage] = Automerge.generateSyncMessage(
+        Automerge.load(binary),
+        syncState
+      )
+      this.setSyncState(id, clientId, nextSyncState)
+      if (nextSyncMessage) {
+        const binaryId = new TextEncoder().encode(id)
+        const newBuffer = new ArrayBuffer(1 + 32 + nextSyncMessage.byteLength)
+        const newBytes = new Uint8Array(newBuffer)
+        newBytes[0] = 0x01
+        newBytes.set(binaryId, 1)
+        newBytes.set(nextSyncMessage, 1 + 32)
+        client.send(newBytes.buffer)
+      }
+    }
+  }
+
   // TODO: lock document
   private onMessage = async (socket: ClientSocket, message: ArrayBuffer) => {
     const binary = new Uint8Array(message)
@@ -49,14 +78,9 @@ export class ServerSync implements Sync {
     const payload = binary.subarray(1)
     switch (type) {
       case 0x00: {
-        const document = Automerge.load(payload) as Todo
-        await this.store.create(document)
-        for (const client of this.socket!.clients()) {
-          if (client === socket) {
-            continue
-          }
-          client.send(message)
-        }
+        await this.store.set(payload)
+        const sockets = this.socket!.clients().filter((s) => s !== socket)
+        this.create(payload, sockets)
         return
       }
       case 0x01: {
@@ -65,30 +89,14 @@ export class ServerSync implements Sync {
         const syncMessage = payload.subarray(32)
         const id = new TextDecoder().decode(binaryId)
         const [document, syncState] = Automerge.receiveSyncMessage(
-          await this.store.get(id),
+          Automerge.load(await this.store.get(id)),
           this.getOrCreateSyncState(id, clientId),
           syncMessage
         )
-        // TODO: save to store, should we lock?
+        const binary = Automerge.save(document)
+        await this.store.set(binary)
         this.setSyncState(id, clientId, syncState)
-        for (const client of this.socket!.clients()) {
-          const clientId = this.getClientId(client)
-          const syncState = this.getOrCreateSyncState(id, clientId)
-          const [nextSyncState, nextSyncMessage] =
-            Automerge.generateSyncMessage(document, syncState)
-          this.setSyncState(id, clientId, nextSyncState)
-
-          if (nextSyncMessage) {
-            const newBuffer = new ArrayBuffer(
-              1 + 32 + nextSyncMessage.byteLength
-            )
-            const newBytes = new Uint8Array(newBuffer)
-            newBytes[0] = 0x01
-            newBytes.set(binaryId, 1)
-            newBytes.set(nextSyncMessage, 1 + 32)
-            client.send(newBytes)
-          }
-        }
+        this.update(id, binary)
         return
       }
       default:
@@ -105,18 +113,26 @@ export class ServerSync implements Sync {
     return clientId
   }
 
-  private setSyncState(id: string, peerId: string, syncState: SyncState) {}
+  private setSyncState(id: string, clientId: string, syncState: SyncState) {
+    const clientStates = this.getOrCreateClientStates(clientId)
+    clientStates.set(id, syncState)
+  }
 
-  private getOrCreateSyncState(id: string, peerId: string) {
-    let peer = this.syncStates.get(peerId)
-    if (!peer) {
-      peer = new Map()
-      this.syncStates.set(peerId, peer)
+  private getOrCreateClientStates(clientId: string) {
+    let clientStates = this.syncStates.get(clientId)
+    if (!clientStates) {
+      clientStates = new Map()
+      this.syncStates.set(clientId, clientStates)
     }
-    let syncState = peer.get(id)
+    return clientStates
+  }
+
+  private getOrCreateSyncState(id: string, clientId: string) {
+    const clientStates = this.getOrCreateClientStates(clientId)
+    let syncState = clientStates.get(id)
     if (!syncState) {
       syncState = Automerge.initSyncState()
-      peer.set(id, syncState)
+      clientStates.set(id, syncState)
     }
     return syncState
   }
