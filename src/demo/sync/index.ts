@@ -65,19 +65,21 @@ export abstract class Sync {
       }
       case UPDATE_TYPE: {
         const { id, syncMessage } = parseUpdatePayload(payload)
-        // TODO: what if we'll get update of a document which does not exist?
-        //       can we get it?
-        const binary = await this.store.get(id)
-        const document = Automerge.load(binary)
-        const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(
-          document,
-          this.getOrCreateSyncState(id, peer),
-          syncMessage
-        )
-        const nextBinary = Automerge.save(nextDocument)
-        await this.store.set(nextBinary)
-        this.setSyncState(id, nextSyncState, peer)
-        this.sendUpdateMessage(id, nextBinary)
+        await this.store.lock.acquire(id, async () => {
+          // TODO: what if we'll get update of a document which does not exist?
+          //       can we get it?
+          const binary = await this.store.get(id)
+          const document = Automerge.load(binary)
+          const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(
+            document,
+            this.getOrCreateSyncState(id, peer),
+            syncMessage
+          )
+          const nextBinary = Automerge.save(nextDocument)
+          await this.store.set(nextBinary)
+          this.setSyncState(id, nextSyncState, peer)
+          this.sendUpdateMessage(id, nextBinary)
+        })
         return
       }
       default:

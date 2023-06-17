@@ -1,4 +1,5 @@
 import * as Automerge from '@automerge/automerge'
+import AsyncLock from 'async-lock'
 import Loki from 'lokijs'
 import { ReplaySubject } from 'rxjs'
 
@@ -10,6 +11,7 @@ import { Todo } from './types'
 
 export class Store {
   private listSubject?: ReplaySubject<Todo[]>
+  public lock = new AsyncLock()
 
   private constructor(private loki: Loki, private idb: Idb) {}
 
@@ -36,10 +38,12 @@ export class Store {
     this.loki.save()
     this.reloadSubject()
 
-    const binary = await this.idb.get(id)
-    const nextBinary = update(binary, slice)
-    await this.idb.set(id, nextBinary)
-    return nextBinary
+    return this.lock.acquire(id, async () => {
+      const binary = await this.idb.get(id)
+      const nextBinary = update(binary, slice)
+      await this.idb.set(id, nextBinary)
+      return nextBinary
+    })
   }
 
   async set(binary: Uint8Array) {

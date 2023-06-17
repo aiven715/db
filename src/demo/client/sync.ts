@@ -17,7 +17,7 @@ export class ClientSync extends Sync {
   private socket?: WebSocket
 
   protected get peers() {
-    return [this.socket!]
+    return this.socket ? [this.socket] : []
   }
 
   constructor(
@@ -60,5 +60,6 @@ export class ClientSync extends Sync {
 
   private onDisconnect = () => {
     this.options.onDisconnect?.()
+    delete this.socket
   }
 }
