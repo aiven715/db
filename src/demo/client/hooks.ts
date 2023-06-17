@@ -1,31 +1,36 @@
 import { uuid } from '@automerge/automerge'
 import { useEffect, useState } from 'react'
 
-import { Entry } from '~/demo/types'
+import { sleep } from '~/library/utils'
+
+import { Todo } from '../types'
 
 import { Client } from './index'
 
 export const useClient = (id: number) => {
-  const [entries, setEntries] = useState<Entry[]>([])
+  const [todos, setTodos] = useState<Todo[]>([])
   const [client, setClient] = useState<Client | null>(null)
   const [isOnline, setIsOnline] = useState(false)
 
   useEffect(() => {
+    let client: Client | null = null
     ;(async () => {
-      const client = await Client.create(id, {
+      client = await Client.create(id, {
         onConnect: () => setIsOnline(true),
         onDisconnect: () => setIsOnline(false),
       })
-      const entries = await client.store.list()
+      await sleep(100)
+      client.sync.start()
       setClient(client)
-      setEntries(entries)
+      client.list().subscribe(setTodos)
     })()
+    return () => client?.sync.stop()
   }, [id])
 
   return {
     client,
     isOnline,
-    entries,
+    todos,
     async create(title: string, description: string) {
       const entry = {
         id: uuid(),
@@ -33,8 +38,10 @@ export const useClient = (id: number) => {
         description,
         version: 0,
       }
-      setEntries((entries) => [...entries, entry])
-      return client?.store.create(entry)
+      return client?.create(entry)
+    },
+    async update(id: string, slice: Partial<Todo>) {
+      return client?.update(id, slice)
     },
   }
 }

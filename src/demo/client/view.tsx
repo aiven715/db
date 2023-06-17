@@ -1,23 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useClient } from './hooks'
 
 export const ClientView = ({ id }: { id: number }) => {
-  const { client, isOnline, entries, create } = useClient(id)
+  const { client, isOnline, todos, create } = useClient(id)
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     null
   )
   const document = useMemo(
-    () => entries.find((d) => d.id === selectedDocumentId),
-    [entries, selectedDocumentId]
+    () => todos.find((d) => d.id === selectedDocumentId),
+    [todos, selectedDocumentId]
   )
-
-  useEffect(() => {
-    if (client) {
-      setTimeout(() => client.start(), 100)
-      return () => client.stop()
-    }
-  }, [client])
 
   return (
     <div className='flex-1 flex flex-col border-b pt-2 px-4'>
@@ -74,7 +67,9 @@ export const ClientView = ({ id }: { id: number }) => {
             <input
               placeholder='Title'
               value={document.title}
-              onChange={() => {}}
+              onChange={(e) =>
+                client!.update(selectedDocumentId!, { title: e.target.value })
+              }
               className='px-2 py-1 mb-4 rounded text-black w-full'
               name='title'
               type='text'
@@ -82,7 +77,11 @@ export const ClientView = ({ id }: { id: number }) => {
             <textarea
               rows={4}
               value={document.description}
-              onChange={() => {}}
+              onChange={(e) =>
+                client!.update(selectedDocumentId!, {
+                  description: e.target.value,
+                })
+              }
               placeholder='Description'
               className='px-2 py-1 rounded text-black w-full'
             />
@@ -93,7 +92,9 @@ export const ClientView = ({ id }: { id: number }) => {
       </div>
       <div className='mt-auto mb-5 flex items-center'>
         <button
-          onClick={() => (isOnline ? client!.stop() : client!.start())}
+          onClick={() =>
+            isOnline ? client!.sync.stop() : client!.sync.start()
+          }
           className='px-2 py-1 bg-gray-800 hover:bg-gray-900 rounded'
         >
           Go {isOnline ? 'offline' : 'online'}
@@ -106,7 +107,7 @@ export const ClientView = ({ id }: { id: number }) => {
           <option value='0' disabled>
             Select document
           </option>
-          {entries.map((document) => (
+          {todos.map((document) => (
             <option key={document.id} value={document.id}>
               {document.title}
             </option>

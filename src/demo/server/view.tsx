@@ -1,12 +1,7 @@
-import { useState } from 'react'
-
 import { useServer } from '~/demo/server/hooks'
 
-import { Entry } from '../types'
-
 export const ServerView = () => {
-  const [documents, setDocuments] = useState<Entry[]>([])
-  const { isOnline, clients, server } = useServer()
+  const { todos, isOnline, clients, server } = useServer()
 
   return (
     <div className='pt-2 pl-4 flex flex-col pr-4'>
@@ -26,7 +21,9 @@ export const ServerView = () => {
           </span>
           <div className='ml-auto'>
             <button
-              onClick={() => (isOnline ? server!.stop() : server!.start())}
+              onClick={() =>
+                isOnline ? server!.sync.stop() : server!.sync.start()
+              }
               className='px-2 py-1 bg-gray-800 hover:bg-gray-900 rounded'
             >
               Go {isOnline ? 'offline' : 'online'}
@@ -47,25 +44,27 @@ export const ServerView = () => {
             </tr>
           </thead>
           <tbody>
-            {!documents.length ? (
+            {!todos.length ? (
               <tr>
                 <td colSpan={4} className='text-center pt-3'>
                   No documents
                 </td>
               </tr>
             ) : (
-              documents.map((document) => (
-                <tr>
-                  <td className='text-left border-r border-dashed pl-3 py-2'>
-                    {document.id}
+              todos.map((todo) => (
+                <tr key={todo.id}>
+                  <td className='w-24 text-left border-r border-dashed pl-3 py-2'>
+                    <span className='w-24 block overflow-hidden overflow-ellipsis'>
+                      {todo.id}
+                    </span>
                   </td>
                   <td className='text-left border-r border-dashed pl-3 py-2'>
-                    {document.title}
+                    {todo.title}
                   </td>
                   <td className='text-left border-r border-dashed pl-3 py-2'>
-                    {document.description}
+                    {todo.description}
                   </td>
-                  <td className='text-left pl-3 py-2'>{document.version}</td>
+                  <td className='text-left pl-3 py-2'>{todo.version}</td>
                 </tr>
               ))
             )}

@@ -5,7 +5,7 @@ export type Message = {
   syncMessage: SyncMessage
 }
 
-export type Entry = {
+export type Todo = {
   id: string
   title: string
   description: string

@@ -1,42 +1,27 @@
-import { WebSocket } from 'mock-socket'
+import { Store } from '../store'
+import { Todo } from '../types'
 
-import { SERVER_URL } from '../server/constants'
-
-import { Store } from './store'
-
-export type ClientOptions = {
-  onConnect?: VoidFunction
-  onDisconnect?: VoidFunction
-}
+import { ClientSync, ClientSyncOptions } from './sync'
 
 export class Client {
-  private constructor(
-    public store: Store,
-    private socket: WebSocket,
-    private options: ClientOptions
-  ) {}
+  private constructor(public sync: ClientSync, private store: Store) {}
 
-  start() {
-    this.socket = new WebSocket(SERVER_URL)
-    this.socket.onopen = this.onConnect
-    this.socket.onclose = this.onDisconnect
+  list() {
+    return this.store.list()
   }
 
-  stop() {
-    this.socket?.close()
+  async create(entry: Todo) {
+    const binary = await this.store.create(entry)
+    this.sync.create(binary)
   }
 
-  private onConnect = (event: Event) => {
-    this.options.onConnect?.()
+  async update(id: string, slice: Partial<Todo>) {
+    await this.store.update(id, slice)
   }
 
-  private onDisconnect = (event: Event) => {
-    this.options.onDisconnect?.()
-  }
-
-  static async create(id: number, options: ClientOptions) {
-    const socket = new WebSocket(SERVER_URL)
-    const store = await Store.create(id, socket)
-    return new this(store, socket, options)
+  static async create(id: number, options: ClientSyncOptions) {
+    const store = await Store.create(`client:${id}`)
+    const sync = new ClientSync(id, store, options)
+    return new this(sync, store)
   }
 }
