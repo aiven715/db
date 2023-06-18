@@ -1,11 +1,11 @@
 import { SyncState } from '@automerge/automerge'
 import * as Automerge from '@automerge/automerge'
+import { WebSocket } from 'mock-socket'
 
 import { CLIENT_ID_PARAM_KEY, SERVER_URL } from '~/demo/constants'
 
 import { Store } from '../store'
 import { Sync } from '../sync'
-import { WebSocket } from '../ws'
 
 export type ClientSyncOptions = {
   onConnect?: VoidFunction
@@ -25,7 +25,7 @@ export class ClientSync extends Sync {
     private id: number,
     private options: ClientSyncOptions
   ) {
-    super(store)
+    super(`CLIENT #${id}`, store)
   }
 
   start() {

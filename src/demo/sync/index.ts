@@ -1,6 +1,7 @@
 import * as Automerge from '@automerge/automerge'
 import { SyncState } from '@automerge/automerge'
 
+import { Logger } from '~/demo/logger'
 import {
   CREATE_TYPE,
   UPDATE_TYPE,
@@ -19,7 +20,8 @@ export type Socket = {
 
 export abstract class Sync {
   protected abstract get peers(): Socket[]
-  protected constructor(private store: Store) {}
+  protected constructor(private name: string, private store: Store) {}
+  private logger = new Logger(this.name)
 
   abstract start(): void
   abstract stop(): void
@@ -34,6 +36,7 @@ export abstract class Sync {
     const message = makeCreateMessage(binary)
     for (const peer of peers) {
       peer.send(message)
+      this.logger.logSend(message)
     }
   }
 
@@ -49,12 +52,13 @@ export abstract class Sync {
       if (nextSyncMessage) {
         const message = makeUpdateMessage(id, nextSyncMessage)
         peer.send(message)
+        this.logger.logSend(message)
       }
     }
   }
 
-  // TODO: lock document
   async receiveMessage(message: ArrayBuffer, peer: Socket) {
+    this.logger.logReceive(message)
     const { type, payload } = parseMessage(message)
     switch (type) {
       case CREATE_TYPE: {
@@ -65,21 +69,23 @@ export abstract class Sync {
       }
       case UPDATE_TYPE: {
         const { id, syncMessage } = parseUpdatePayload(payload)
-        await this.store.lock.acquire(id, async () => {
-          // TODO: what if we'll get update of a document which does not exist?
-          //       can we get it?
-          const binary = await this.store.get(id)
-          const document = Automerge.load(binary)
-          const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(
-            document,
-            this.getOrCreateSyncState(id, peer),
-            syncMessage
-          )
-          const nextBinary = Automerge.save(nextDocument)
+        // TODO: what if we'll get update of a document which does not exist?
+        //       can we get it?
+        const binary = await this.store.get(id)
+        const document = Automerge.load(binary)
+        const syncState = this.getOrCreateSyncState(id, peer)
+        const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(
+          document,
+          syncState,
+          syncMessage
+        )
+        const nextBinary = Automerge.save(nextDocument)
+        // TODO: is it safe to rely on the length?
+        if (binary.length !== nextBinary.length) {
           await this.store.set(nextBinary)
-          this.setSyncState(id, nextSyncState, peer)
-          this.sendUpdateMessage(id, nextBinary)
-        })
+        }
+        this.setSyncState(id, nextSyncState, peer)
+        this.sendUpdateMessage(id, nextBinary)
         return
       }
       default:

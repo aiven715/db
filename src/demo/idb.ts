@@ -9,8 +9,8 @@ export class Idb {
     return this.db.getAll(STORE_KEY) as Promise<Uint8Array[]>
   }
 
-  async set(id: string, document: Uint8Array) {
-    await this.db.put(STORE_KEY, document, id)
+  async set(id: string, binary: Uint8Array) {
+    await this.db.put(STORE_KEY, binary, id)
   }
 
   async get(id: string) {

@@ -22,7 +22,7 @@ export class ServerSync extends Sync {
   }
 
   constructor(store: Store, private options: ServerSyncOptions) {
-    super(store)
+    super('SERVER', store)
   }
 
   start() {
