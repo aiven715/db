@@ -35,8 +35,8 @@ export abstract class Sync {
   sendCreateMessage(binary: Uint8Array, peers = this.peers) {
     const message = makeCreateMessage(binary)
     for (const peer of peers) {
-      peer.send(message)
       this.logger.logSend(message)
+      peer.send(message)
     }
   }
 
@@ -51,8 +51,8 @@ export abstract class Sync {
       this.setSyncState(id, nextSyncState, peer)
       if (nextSyncMessage) {
         const message = makeUpdateMessage(id, nextSyncMessage)
-        peer.send(message)
         this.logger.logSend(message)
+        peer.send(message)
       }
     }
   }

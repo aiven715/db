@@ -26,6 +26,6 @@ export class Logger {
       const { syncMessage } = parseUpdatePayload(payload)
       return ['U', sizeStr, Automerge.decodeSyncMessage(syncMessage)]
     }
-    return ['C', Automerge.load(new Uint8Array(message))]
+    return ['C', Automerge.load(new Uint8Array(payload))]
   }
 }
