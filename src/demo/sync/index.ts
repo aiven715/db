@@ -41,7 +41,9 @@ export abstract class Sync {
       this.setSyncState(id, nextSyncState, peer)
       const message = createMessage(id, nextSyncMessage)
       this.logger.logSend(nextSyncMessage)
-      this.syncing.add(id)
+      if (nextSyncMessage) {
+        this.syncing.add(id)
+      }
       peer.send(message)
     }
   }
