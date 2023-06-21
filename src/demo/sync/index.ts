@@ -1,18 +1,11 @@
 import * as Automerge from '@automerge/automerge'
 import { SyncState } from '@automerge/automerge'
-import isEqual from 'lodash/isEqual'
 
 import { Logger } from '~/demo/logger'
-import {
-  CREATE_TYPE,
-  UPDATE_TYPE,
-  makeCreateMessage,
-  makeUpdateMessage,
-  parseMessage,
-  parseUpdatePayload,
-} from '~/demo/sync/message'
 
 import { Store } from '../store'
+
+import { createMessage, parseMessage } from './message'
 
 export type Socket = {
   url: string
@@ -34,16 +27,8 @@ export abstract class Sync {
     peer: Socket
   ): void
 
-  sendCreateMessage(binary: Uint8Array, peers = this.peers) {
-    const message = makeCreateMessage(binary)
-    for (const peer of peers) {
-      this.logger.logSend(message)
-      peer.send(message)
-    }
-  }
-
-  // TODO: rename into sendSyncMessage (since it's also will be used for the sync after offline)
-  sendUpdateMessage(id: string, binary: Uint8Array) {
+  // FIXME: document is not updated after it was created
+  sendMessage(id: string, binary: Uint8Array) {
     if (this.syncing.has(id)) {
       return
     }
@@ -56,7 +41,7 @@ export abstract class Sync {
       )
       this.setSyncState(id, nextSyncState, peer)
       if (nextSyncMessage) {
-        const message = makeUpdateMessage(id, nextSyncMessage)
+        const message = createMessage(id, nextSyncMessage)
         this.logger.logSend(message)
         this.syncing.add(id)
         peer.send(message)
@@ -66,54 +51,23 @@ export abstract class Sync {
 
   async receiveMessage(message: ArrayBuffer, peer: Socket) {
     this.logger.logReceive(message)
-    const { type, payload } = parseMessage(message)
-    switch (type) {
-      case CREATE_TYPE: {
-        await this.store.set(payload)
-        const peers = this.peers.filter((s) => s !== peer)
-        this.sendCreateMessage(payload, peers)
-        return
-      }
-      case UPDATE_TYPE: {
-        const { id, syncMessage } = parseUpdatePayload(payload)
-        this.syncing.delete(id)
-        // TODO: what if we'll get update of a document which does not exist?
-        //       can we get it?
-        const binary = await this.store.get(id)
-        const document = Automerge.load(binary)
-        const syncState = this.getOrCreateSyncState(id, peer)
-        const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(
-          document,
-          syncState,
-          syncMessage
-        )
-        const nextBinary = Automerge.save(nextDocument)
-        // TODO: is it safe to rely on the length?
-        if (binary.length !== nextBinary.length) {
-          await this.store.set(nextBinary)
-        }
-        this.setSyncState(id, nextSyncState, peer)
-        this.sendUpdateMessage(id, nextBinary)
-        return
-      }
-      default:
-        throw new Error('Unknown first byte')
+    const { id, syncMessage } = parseMessage(message)
+    this.syncing.delete(id)
+    const binary = await this.store.get(id)
+    const document = binary ? Automerge.load(binary) : Automerge.init()
+    const syncState = this.getOrCreateSyncState(id, peer)
+    const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(
+      document,
+      syncState,
+      syncMessage
+    )
+    const nextBinary = Automerge.save(nextDocument)
+    const isEmpty = Automerge.getAllChanges(nextDocument).length === 0
+    if (!isEmpty && binary?.length !== nextBinary.length) {
+      await this.store.set(nextBinary)
     }
+    this.setSyncState(id, nextSyncState, peer)
+    this.sendMessage(id, nextBinary)
+    return
   }
 }
-
-// const document = Automerge.from({ foo: 1, bar: 2 })
-//
-// const [syncState, syncMessage] = Automerge.generateSyncMessage(
-//   document,
-//   Automerge.initSyncState()
-// )
-//
-// if (syncMessage) {
-//   const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(
-//     Automerge.init(),
-//     Automerge.initSyncState(),
-//     syncMessage
-//   )
-//   console.log(nextSyncState, Automerge.decodeSyncMessage(syncMessage))
-// }

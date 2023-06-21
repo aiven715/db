@@ -1,6 +1,6 @@
 import * as Automerge from '@automerge/automerge'
 
-import { UPDATE_TYPE, parseMessage, parseUpdatePayload } from './sync/message'
+import { parseMessage } from './sync/message'
 import { formatBytes } from './utils'
 
 export class Logger {
@@ -20,12 +20,8 @@ export class Logger {
   }
 
   private renderMessage(message: ArrayBuffer) {
-    const { type, payload } = parseMessage(message)
+    const { syncMessage } = parseMessage(message)
     const sizeStr = `size: ${formatBytes(message.byteLength)}`
-    if (type === UPDATE_TYPE) {
-      const { syncMessage } = parseUpdatePayload(payload)
-      return ['U', sizeStr, Automerge.decodeSyncMessage(syncMessage)]
-    }
-    return ['C', Automerge.load(new Uint8Array(payload))]
+    return [sizeStr, Automerge.decodeSyncMessage(syncMessage)]
   }
 }
