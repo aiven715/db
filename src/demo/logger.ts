@@ -1,27 +1,30 @@
 import * as Automerge from '@automerge/automerge'
+import { SyncMessage } from '@automerge/automerge'
 
-import { parseMessage } from './sync/message'
 import { formatBytes } from './utils'
 
 export class Logger {
   constructor(private name: string) {}
 
-  logSend(message: ArrayBuffer) {
-    this.log('send', message)
+  logSend(syncMessage: SyncMessage) {
+    this.log('send', syncMessage)
   }
 
-  logReceive(message: ArrayBuffer) {
-    this.log('receive', message)
+  logReceive(syncMessage: SyncMessage) {
+    this.log('receive', syncMessage)
   }
 
-  private log(type: 'send' | 'receive', message: ArrayBuffer) {
+  private log(type: 'send' | 'receive', syncMessage: SyncMessage) {
     const time = new Date().toLocaleTimeString()
-    console.log(`${this.name} ${type}:`, ...this.renderMessage(message), time)
+    console.log(
+      `${this.name} ${type}:`,
+      ...this.renderMessage(syncMessage),
+      time
+    )
   }
 
-  private renderMessage(message: ArrayBuffer) {
-    const { syncMessage } = parseMessage(message)
-    const sizeStr = `size: ${formatBytes(message.byteLength)}`
+  private renderMessage(syncMessage: SyncMessage) {
+    const sizeStr = `size: ${formatBytes(syncMessage.byteLength)}`
     return [sizeStr, Automerge.decodeSyncMessage(syncMessage)]
   }
 }

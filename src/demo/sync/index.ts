@@ -42,7 +42,7 @@ export abstract class Sync {
       this.setSyncState(id, nextSyncState, peer)
       if (nextSyncMessage) {
         const message = createMessage(id, nextSyncMessage)
-        this.logger.logSend(message)
+        this.logger.logSend(nextSyncMessage)
         this.syncing.add(id)
         peer.send(message)
       }
@@ -50,8 +50,8 @@ export abstract class Sync {
   }
 
   async receiveMessage(message: ArrayBuffer, peer: Socket) {
-    this.logger.logReceive(message)
     const { id, syncMessage } = parseMessage(message)
+    this.logger.logReceive(syncMessage)
     this.syncing.delete(id)
     const binary = await this.store.get(id)
     const document = binary ? Automerge.load(binary) : Automerge.init()
