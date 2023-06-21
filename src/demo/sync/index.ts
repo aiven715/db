@@ -27,7 +27,7 @@ export abstract class Sync {
     peer: Socket
   ): void
 
-  // FIXME: document is not updated after it was created
+  // FIXME: document is not updated after it was created (in another client)
   sendMessage(id: string, binary: Uint8Array) {
     if (this.syncing.has(id)) {
       return
@@ -49,6 +49,7 @@ export abstract class Sync {
     }
   }
 
+  // TODO: syncMessage might be empty which will mean communication cycle is finished
   async receiveMessage(message: ArrayBuffer, peer: Socket) {
     const { id, syncMessage } = parseMessage(message)
     this.logger.logReceive(syncMessage)
@@ -62,7 +63,8 @@ export abstract class Sync {
       syncMessage
     )
     const nextBinary = Automerge.save(nextDocument)
-    const isEmpty = Automerge.getAllChanges(nextDocument).length === 0
+    const isEmpty =
+      !binary && Automerge.getAllChanges(nextDocument).length === 0
     if (!isEmpty && binary?.length !== nextBinary.length) {
       await this.store.set(nextBinary)
     }
