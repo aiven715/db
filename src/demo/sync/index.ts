@@ -1,5 +1,6 @@
 import * as Automerge from '@automerge/automerge'
 import { SyncState } from '@automerge/automerge'
+import isEqual from 'lodash/isEqual'
 
 import { Logger } from '~/demo/logger'
 import {
@@ -22,6 +23,7 @@ export abstract class Sync {
   protected abstract get peers(): Socket[]
   protected constructor(private name: string, private store: Store) {}
   private logger = new Logger(this.name)
+  private syncing = new Set<string>()
 
   abstract start(): void
   abstract stop(): void
@@ -40,7 +42,11 @@ export abstract class Sync {
     }
   }
 
+  // TODO: rename into sendSyncMessage (since it's also will be used for the sync after offline)
   sendUpdateMessage(id: string, binary: Uint8Array) {
+    if (this.syncing.has(id)) {
+      return
+    }
     for (const peer of this.peers) {
       const syncState = this.getOrCreateSyncState(id, peer)
       const document = Automerge.load(binary)
@@ -52,6 +58,7 @@ export abstract class Sync {
       if (nextSyncMessage) {
         const message = makeUpdateMessage(id, nextSyncMessage)
         this.logger.logSend(message)
+        this.syncing.add(id)
         peer.send(message)
       }
     }
@@ -69,6 +76,7 @@ export abstract class Sync {
       }
       case UPDATE_TYPE: {
         const { id, syncMessage } = parseUpdatePayload(payload)
+        this.syncing.delete(id)
         // TODO: what if we'll get update of a document which does not exist?
         //       can we get it?
         const binary = await this.store.get(id)
@@ -93,3 +101,19 @@ export abstract class Sync {
     }
   }
 }
+
+// const document = Automerge.from({ foo: 1, bar: 2 })
+//
+// const [syncState, syncMessage] = Automerge.generateSyncMessage(
+//   document,
+//   Automerge.initSyncState()
+// )
+//
+// if (syncMessage) {
+//   const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(
+//     Automerge.init(),
+//     Automerge.initSyncState(),
+//     syncMessage
+//   )
+//   console.log(nextSyncState, Automerge.decodeSyncMessage(syncMessage))
+// }

@@ -6,7 +6,7 @@ export const App = () => {
     <>
       <div className='flex flex-col w-1/2 h-screen border-r'>
         <ClientView id={1} />
-        {/*<ClientView id={2} />*/}
+        <ClientView id={2} />
       </div>
       <div className='w-1/2'>
         <ServerView />

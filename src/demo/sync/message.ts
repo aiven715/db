@@ -1,5 +1,7 @@
 import { SyncMessage } from '@automerge/automerge'
 
+// TODO: use CBOR?
+
 export const CREATE_TYPE = 0x00
 export const UPDATE_TYPE = 0x01
 
