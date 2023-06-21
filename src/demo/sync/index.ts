@@ -27,7 +27,6 @@ export abstract class Sync {
     peer: Socket
   ): void
 
-  // FIXME: document is not updated after it was created (in another client)
   sendMessage(id: string, binary: Uint8Array) {
     if (this.syncing.has(id)) {
       return
@@ -40,20 +39,20 @@ export abstract class Sync {
         syncState
       )
       this.setSyncState(id, nextSyncState, peer)
-      if (nextSyncMessage) {
-        const message = createMessage(id, nextSyncMessage)
-        this.logger.logSend(nextSyncMessage)
-        this.syncing.add(id)
-        peer.send(message)
-      }
+      const message = createMessage(id, nextSyncMessage)
+      this.logger.logSend(nextSyncMessage)
+      this.syncing.add(id)
+      peer.send(message)
     }
   }
 
-  // TODO: syncMessage might be empty which will mean communication cycle is finished
   async receiveMessage(message: ArrayBuffer, peer: Socket) {
     const { id, syncMessage } = parseMessage(message)
     this.logger.logReceive(syncMessage)
     this.syncing.delete(id)
+    if (!syncMessage) {
+      return
+    }
     const binary = await this.store.get(id)
     const document = binary ? Automerge.load(binary) : Automerge.init()
     const syncState = this.getOrCreateSyncState(id, peer)

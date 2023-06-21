@@ -6,15 +6,15 @@ import { formatBytes } from './utils'
 export class Logger {
   constructor(private name: string) {}
 
-  logSend(syncMessage: SyncMessage) {
+  logSend(syncMessage: SyncMessage | null) {
     this.log('send', syncMessage)
   }
 
-  logReceive(syncMessage: SyncMessage) {
+  logReceive(syncMessage: SyncMessage | null) {
     this.log('receive', syncMessage)
   }
 
-  private log(type: 'send' | 'receive', syncMessage: SyncMessage) {
+  private log(type: 'send' | 'receive', syncMessage: SyncMessage | null) {
     const time = new Date().toLocaleTimeString()
     console.log(
       `${this.name} ${type}:`,
@@ -23,7 +23,10 @@ export class Logger {
     )
   }
 
-  private renderMessage(syncMessage: SyncMessage) {
+  private renderMessage(syncMessage: SyncMessage | null) {
+    if (!syncMessage) {
+      return ['END']
+    }
     const sizeStr = `size: ${formatBytes(syncMessage.byteLength)}`
     return [sizeStr, Automerge.decodeSyncMessage(syncMessage)]
   }
