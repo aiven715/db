@@ -64,9 +64,7 @@ export const ServerView = () => {
                   <td className='text-left border-r border-dashed pl-3 py-2'>
                     {todo.title}
                   </td>
-                  <td className='text-left border-r border-dashed pl-3 py-2'>
-                    {todo.description}
-                  </td>
+                  <td className='text-left pl-3 py-2'>{todo.description}</td>
                 </tr>
               ))
             )}

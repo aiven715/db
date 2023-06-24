@@ -15,7 +15,7 @@ export class ServerStore extends Store {
     return nextBinary
   }
 
-  static override async create() {
-    return super.create('server')
+  static override async create<S extends typeof Store>(this: S) {
+    return super.create('server') as InstanceType<S>
   }
 }

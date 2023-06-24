@@ -2,6 +2,7 @@ import * as Automerge from '@automerge/automerge'
 import { SyncState } from '@automerge/automerge'
 
 import { Logger } from '~/demo/logger'
+import { Todo } from '~/demo/types'
 
 import { Store } from '../store'
 
@@ -14,7 +15,7 @@ export type Socket = {
 
 export abstract class Sync {
   protected abstract get peers(): Socket[]
-  protected constructor(private name: string, private store: Store) {}
+  protected constructor(private name: string, protected store: Store) {}
   private logger = new Logger(this.name)
   private syncing = new Set<string>()
 
@@ -56,9 +57,11 @@ export abstract class Sync {
       return
     }
     const binary = await this.store.getBinary(id)
-    const document = binary ? Automerge.load(binary) : Automerge.init()
+    const document = binary
+      ? Automerge.load<Todo>(binary)
+      : Automerge.init<Todo>()
     const syncState = this.getOrCreateSyncState(id, peer)
-    const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(
+    const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage<Todo>(
       document,
       syncState,
       syncMessage
@@ -71,6 +74,6 @@ export abstract class Sync {
     }
     this.setSyncState(id, nextSyncState, peer)
     this.sendMessage(id, nextBinary)
-    return
+    return [nextBinary, nextDocument] as const
   }
 }

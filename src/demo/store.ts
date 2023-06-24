@@ -14,7 +14,7 @@ export class Store {
   private timeouts: Record<string, ReturnType<typeof setTimeout>> = {}
   public lock = new AsyncLock()
 
-  protected constructor(private loki: Loki, private idb: Idb) {}
+  constructor(private loki: Loki, protected idb: Idb) {}
 
   list() {
     if (!this.listSubject) {
@@ -46,9 +46,9 @@ export class Store {
     clearTimeout(this.timeouts[id])
     this.timeouts[id] = setTimeout(() => {
       this.lock.acquire(id, async () => {
-        const binary = await this.idb.get(id)
+        const binary = await this.idb.get(COLLECTION_NAME, id)
         const nextBinary = update(binary, slice)
-        await this.idb.set(id, nextBinary)
+        await this.idb.set(COLLECTION_NAME, id, nextBinary)
         callback(nextBinary)
       })
     }, 50)
@@ -67,7 +67,7 @@ export class Store {
     }
     this.loki.save()
     this.reloadSubject()
-    await this.idb.set(todo.id, binary)
+    await this.idb.set(COLLECTION_NAME, todo.id, binary)
     return binary
   }
 
@@ -76,7 +76,7 @@ export class Store {
   updateBinary() {}
 
   async getBinary(id: string) {
-    return this.idb.get(id)
+    return this.idb.get(COLLECTION_NAME, id)
   }
 
   private get collection() {
@@ -88,9 +88,13 @@ export class Store {
     this.listSubject?.next(items)
   }
 
-  static async create(name: string) {
-    const idb = await Idb.create(name)
-    const items = (await idb.list()).map(deserialize) as Todo[]
+  static async create<S extends typeof Store>(
+    this: S,
+    name: string,
+    collectionNames: string[] = [COLLECTION_NAME]
+  ) {
+    const idb = await Idb.create(name, collectionNames)
+    const items = (await idb.list(COLLECTION_NAME)).map(deserialize) as Todo[]
     const loki = new Loki(name, {
       autoload: true,
       throttledSaves: true,
@@ -98,6 +102,6 @@ export class Store {
     })
     const collection = loki.addCollection(COLLECTION_NAME)
     collection.insert(items)
-    return new this(loki, idb)
+    return new this(loki, idb) as unknown as InstanceType<S>
   }
 }

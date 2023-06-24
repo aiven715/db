@@ -2,7 +2,11 @@ import * as Automerge from '@automerge/automerge'
 import { SyncState } from '@automerge/automerge'
 import { Client as ClientSocket, Server as ServerSocket } from 'mock-socket'
 
-import { CLIENT_ID_PARAM_KEY, SERVER_URL } from '~/demo/constants'
+import {
+  CHECKPOINT_PARAM_KEY,
+  CLIENT_ID_PARAM_KEY,
+  SERVER_URL,
+} from '~/demo/constants'
 
 import { Store } from '../store'
 import { Socket, Sync } from '../sync'
@@ -30,7 +34,10 @@ export class ServerSync extends Sync {
     this.stop()
     this.server = new ServerSocket(SERVER_URL)
     this.server.on('connection', (socket) => {
+      const { checkpoint } = this.parseUrl(socket)
       this.options.onClientsChange?.(this.server!.clients())
+      // TODO: what if client will start sending messages before we send un-synced documents?
+      console.log({ checkpoint })
       socket.on('message', (message) =>
         this.receiveMessage(message as ArrayBuffer, socket)
       )
@@ -48,13 +55,13 @@ export class ServerSync extends Sync {
   }
 
   protected setSyncState(id: string, syncState: SyncState, socket: Socket) {
-    const clientId = this.getClientId(socket)
+    const { clientId } = this.parseUrl(socket)
     const clientStates = this.getOrCreateClientStates(clientId)
     clientStates.set(id, syncState)
   }
 
   protected getOrCreateSyncState(id: string, socket: Socket) {
-    const clientId = this.getClientId(socket)
+    const { clientId } = this.parseUrl(socket)
     const clientStates = this.getOrCreateClientStates(clientId)
     let syncState = clientStates.get(id)
     if (!syncState) {
@@ -73,12 +80,13 @@ export class ServerSync extends Sync {
     return clientStates
   }
 
-  private getClientId(socket: Socket) {
+  private parseUrl(socket: Socket) {
     const url = new URL(socket.url)
     const clientId = url.searchParams.get(CLIENT_ID_PARAM_KEY)
     if (!clientId) {
       throw new Error('Client id is not specified')
     }
-    return clientId
+    const checkpoint = url.searchParams.get(CHECKPOINT_PARAM_KEY)
+    return { clientId, checkpoint }
   }
 }
