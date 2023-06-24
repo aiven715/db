@@ -48,9 +48,6 @@ export abstract class Sync {
     }
   }
 
-  // FIXME: probably there's a bug, which causes a client does not
-  //        send a full list of remaining changes in one sync message
-  //        when sending a big amount of messages
   async receiveMessage(message: ArrayBuffer, peer: Socket) {
     const { id, syncMessage } = parseMessage(message)
     this.logger.logReceive(syncMessage)

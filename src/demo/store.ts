@@ -11,6 +11,7 @@ import { Todo } from './types'
 
 export class Store {
   private listSubject?: ReplaySubject<Todo[]>
+  private timeouts: Record<string, ReturnType<typeof setTimeout>> = {}
   public lock = new AsyncLock()
 
   private constructor(private loki: Loki, private idb: Idb) {}
@@ -30,7 +31,11 @@ export class Store {
     return binary
   }
 
-  async update(id: string, slice: Partial<Todo>) {
+  async update(
+    id: string,
+    slice: Partial<Todo>,
+    callback: (binary: Uint8Array) => void
+  ) {
     this.collection
       .chain()
       .find({ id })
@@ -38,12 +43,15 @@ export class Store {
     this.loki.save()
     this.reloadSubject()
 
-    return this.lock.acquire(id, async () => {
-      const binary = await this.idb.get(id)
-      const nextBinary = update(binary, slice)
-      await this.idb.set(id, nextBinary)
-      return nextBinary
-    })
+    clearTimeout(this.timeouts[id])
+    this.timeouts[id] = setTimeout(() => {
+      this.lock.acquire(id, async () => {
+        const binary = await this.idb.get(id)
+        const nextBinary = update(binary, slice)
+        await this.idb.set(id, nextBinary)
+        callback(nextBinary)
+      })
+    }, 50)
   }
 
   async set(binary: Uint8Array) {

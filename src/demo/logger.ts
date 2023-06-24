@@ -14,12 +14,17 @@ export class Logger {
     this.log('receive', syncMessage)
   }
 
-  private log(type: 'send' | 'receive', syncMessage: SyncMessage | null) {
+  private log(
+    type: 'send' | 'receive',
+    syncMessage: SyncMessage | null,
+    binary?: Uint8Array
+  ) {
     const time = new Date().toLocaleTimeString()
     console.log(
       `${this.name} ${type}:`,
       ...this.renderMessage(syncMessage),
-      time
+      time,
+      binary ? binary.byteLength : ''
     )
   }
 

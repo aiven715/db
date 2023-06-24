@@ -16,8 +16,9 @@ export class Client {
   }
 
   async update(id: string, slice: Partial<Todo>) {
-    const binary = await this.store.update(id, slice)
-    this.sync.sendMessage(id, binary)
+    await this.store.update(id, slice, (binary) =>
+      this.sync.sendMessage(id, binary)
+    )
   }
 
   static async create(id: number, options: ClientSyncOptions) {
