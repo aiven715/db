@@ -11,7 +11,7 @@ export class Client {
   }
 
   async create(entry: Todo) {
-    const binary = await this.store.create(entry)
+    const binary = await this.store.insert(entry)
     this.sync.sendMessage(entry.id, binary)
   }
 

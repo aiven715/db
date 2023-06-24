@@ -48,6 +48,9 @@ export abstract class Sync {
     }
   }
 
+  // FIXME: probably there's a bug, which causes a client does not
+  //        send a full list of remaining changes in one sync message
+  //        when sending a big amount of messages
   async receiveMessage(message: ArrayBuffer, peer: Socket) {
     const { id, syncMessage } = parseMessage(message)
     this.logger.logReceive(syncMessage)
@@ -55,7 +58,7 @@ export abstract class Sync {
     if (!syncMessage) {
       return
     }
-    const binary = await this.store.get(id)
+    const binary = await this.store.getBinary(id)
     const document = binary ? Automerge.load(binary) : Automerge.init()
     const syncState = this.getOrCreateSyncState(id, peer)
     const [nextDocument, nextSyncState] = Automerge.receiveSyncMessage(

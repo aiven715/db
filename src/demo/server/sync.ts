@@ -13,6 +13,7 @@ export type ServerSyncOptions = {
   onStop?: VoidFunction
 }
 
+// TODO: should use extended version of a store to set "updatedAt" flag on save
 export class ServerSync extends Sync {
   private server?: ServerSocket
   private syncStates = new Map<string, Map<string, SyncState>>()

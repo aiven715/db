@@ -23,7 +23,7 @@ export class Store {
     return this.listSubject.asObservable()
   }
 
-  async create(entry: Todo) {
+  async insert(entry: Todo) {
     const document = Automerge.from(entry)
     const binary = Automerge.save(document)
     await this.set(binary)
@@ -62,7 +62,11 @@ export class Store {
     await this.idb.set(todo.id, binary)
   }
 
-  async get(id: string) {
+  insertBinary() {}
+
+  updateBinary() {}
+
+  async getBinary(id: string) {
     return this.idb.get(id)
   }
 
