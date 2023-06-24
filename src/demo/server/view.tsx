@@ -35,12 +35,12 @@ export const ServerView = () => {
             <tr className='border-b border-dashed'>
               <th className='pl-3 text-left pb-2 border-r border-dashed'>id</th>
               <th className='pl-3 text-left pb-2 border-r border-dashed'>
-                title
+                updatedAt
               </th>
               <th className='pl-3 text-left pb-2 border-r border-dashed'>
-                description
+                title
               </th>
-              <th className='pl-3 text-left pb-2'>version</th>
+              <th className='pl-3 text-left pb-2'>description</th>
             </tr>
           </thead>
           <tbody>
@@ -59,12 +59,14 @@ export const ServerView = () => {
                     </span>
                   </td>
                   <td className='text-left border-r border-dashed pl-3 py-2'>
+                    {todo.updatedAt}
+                  </td>
+                  <td className='text-left border-r border-dashed pl-3 py-2'>
                     {todo.title}
                   </td>
                   <td className='text-left border-r border-dashed pl-3 py-2'>
                     {todo.description}
                   </td>
-                  <td className='text-left pl-3 py-2'>{todo.version}</td>
                 </tr>
               ))
             )}

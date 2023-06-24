@@ -34,6 +34,7 @@ export const useClient = (id: number) => {
     async create(title: string, description: string) {
       const entry = {
         id: uuid(),
+        updatedAt: null,
         title,
         description,
         version: 0,

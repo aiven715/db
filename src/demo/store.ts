@@ -14,7 +14,7 @@ export class Store {
   private timeouts: Record<string, ReturnType<typeof setTimeout>> = {}
   public lock = new AsyncLock()
 
-  private constructor(private loki: Loki, private idb: Idb) {}
+  protected constructor(private loki: Loki, private idb: Idb) {}
 
   list() {
     if (!this.listSubject) {
@@ -68,6 +68,7 @@ export class Store {
     this.loki.save()
     this.reloadSubject()
     await this.idb.set(todo.id, binary)
+    return binary
   }
 
   insertBinary() {}

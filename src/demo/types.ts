@@ -7,6 +7,7 @@ export type Message = {
 
 export type Todo = {
   id: string
+  updatedAt: number | null
   title: string
   description: string
   version: number

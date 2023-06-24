@@ -63,11 +63,11 @@ export abstract class Sync {
       syncState,
       syncMessage
     )
-    const nextBinary = Automerge.save(nextDocument)
+    let nextBinary = Automerge.save(nextDocument)
     const isEmpty =
       !binary && Automerge.getAllChanges(nextDocument).length === 0
     if (!isEmpty && binary?.length !== nextBinary.length) {
-      await this.store.set(nextBinary)
+      nextBinary = await this.store.set(nextBinary)
     }
     this.setSyncState(id, nextSyncState, peer)
     this.sendMessage(id, nextBinary)
