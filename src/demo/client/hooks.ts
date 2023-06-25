@@ -37,7 +37,6 @@ export const useClient = (id: number) => {
         updatedAt: null,
         title,
         description,
-        version: 0,
       }
       return client?.create(entry)
     },

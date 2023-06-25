@@ -10,5 +10,8 @@ export type Todo = {
   updatedAt: number | null
   title: string
   description: string
-  version: number
+  __metadata?: {
+    clientLastWrite: number | null
+    serverLastWrite: number | null
+  }
 }

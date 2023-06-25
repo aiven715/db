@@ -27,8 +27,8 @@ export class Store {
   async insert(entry: Todo) {
     const document = Automerge.from(entry)
     const binary = Automerge.save(document)
-    await this.set(binary)
-    return binary
+    this.insertLoki(entry)
+    return await this.save(COLLECTION_NAME, entry.id, binary)
   }
 
   async update(
@@ -36,47 +36,58 @@ export class Store {
     slice: Partial<Todo>,
     callback: (binary: Uint8Array) => void
   ) {
-    this.collection
-      .chain()
-      .find({ id })
-      .update((item: Todo) => Object.assign(item, slice))
-    this.loki.save()
-    this.reloadSubject()
-
+    this.updateLoki(id, slice)
     clearTimeout(this.timeouts[id])
     this.timeouts[id] = setTimeout(() => {
       this.lock.acquire(id, async () => {
         const binary = await this.idb.get(COLLECTION_NAME, id)
-        const nextBinary = update(binary, slice)
-        await this.idb.set(COLLECTION_NAME, id, nextBinary)
+        const nextBinary = await this.save(
+          COLLECTION_NAME,
+          id,
+          update(binary, slice)
+        )
         callback(nextBinary)
       })
     }, 50)
   }
 
-  async set(binary: Uint8Array) {
-    const todo = deserialize(binary) as Todo
-    const existingTodo = this.collection.findOne({ id: todo.id })
-    if (!existingTodo) {
-      this.collection.insert({ ...todo })
+  async upsertBinary(binary: Uint8Array) {
+    const todo = Automerge.load<Todo>(binary)
+    const result = await this.save(COLLECTION_NAME, todo.id, binary)
+    if (!this.getLoki(todo.id)) {
+      this.insertLoki(todo)
     } else {
-      this.collection
-        .chain()
-        .find({ id: todo.id })
-        .update((item) => Object.assign(item, { ...todo }))
+      this.updateLoki(todo.id, todo)
     }
-    this.loki.save()
-    this.reloadSubject()
-    await this.idb.set(COLLECTION_NAME, todo.id, binary)
-    return binary
+    return result
   }
-
-  insertBinary() {}
-
-  updateBinary() {}
 
   async getBinary(id: string) {
     return this.idb.get(COLLECTION_NAME, id)
+  }
+
+  protected async save(collectionName: string, id: string, binary: Uint8Array) {
+    await this.idb.set(collectionName, id, binary)
+    return binary
+  }
+
+  private getLoki(id: string) {
+    return this.collection.findOne({ id })
+  }
+
+  private insertLoki(todo: Todo) {
+    this.collection.insert({ ...todo })
+    this.loki.save()
+    this.reloadSubject()
+  }
+
+  private updateLoki(id: string, slice: Partial<Todo>) {
+    this.collection
+      .chain()
+      .find({ id })
+      .update((item) => Object.assign(item, { ...slice }))
+    this.loki.save()
+    this.reloadSubject()
   }
 
   private get collection() {
