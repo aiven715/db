@@ -8,7 +8,7 @@ export class ServerStore extends Store {
   override async save(collectionNme: string, id: string, binary: Uint8Array) {
     const document = Automerge.load<Todo>(binary)
     const nextDocument = Automerge.change<Todo>(document, (doc) => {
-      doc.updatedAt = Date.now()
+      doc.__metadata.serverLastWrite = Date.now()
     })
     const nextBinary = Automerge.save(nextDocument)
     return await super.save(collectionNme, id, nextBinary)

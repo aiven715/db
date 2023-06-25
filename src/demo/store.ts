@@ -67,6 +67,7 @@ export class Store {
   }
 
   protected async save(collectionName: string, id: string, binary: Uint8Array) {
+    // TODO: should we get data before set and merge? (to avoid echoing?)
     await this.idb.set(collectionName, id, binary)
     return binary
   }

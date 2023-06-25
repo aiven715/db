@@ -7,10 +7,9 @@ export type Message = {
 
 export type Todo = {
   id: string
-  updatedAt: number | null
   title: string
   description: string
-  __metadata?: {
+  __metadata: {
     clientLastWrite: number | null
     serverLastWrite: number | null
   }

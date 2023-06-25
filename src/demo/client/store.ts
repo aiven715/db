@@ -1,4 +1,7 @@
+import * as Automerge from '@automerge/automerge'
+
 import { COLLECTION_NAME } from '~/demo/constants'
+import { Todo } from '~/demo/types'
 
 import { Store } from '../store'
 

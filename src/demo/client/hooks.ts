@@ -34,9 +34,12 @@ export const useClient = (id: number) => {
     async create(title: string, description: string) {
       const entry = {
         id: uuid(),
-        updatedAt: null,
         title,
         description,
+        __metadata: {
+          clientLastWrite: null,
+          serverLastWrite: null,
+        },
       }
       return client?.create(entry)
     },
